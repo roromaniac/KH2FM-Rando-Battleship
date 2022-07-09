@@ -43,7 +43,7 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 
 # Features in Development (and their expected release dates).
 1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> ETA: 1-2 days.
-2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: 1 week.
+2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: 2 weeks.
 2. <ins>Clear Board</ins>: Clear the board during placement mode. ETA: 2 weeks.
 3. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks.
 4. <ins>Toggle Checks for Inclusiuon</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months.
