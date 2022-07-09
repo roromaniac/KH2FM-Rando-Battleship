@@ -123,7 +123,7 @@ class BattleshipBoard():
 
 
     def open_help_window(self):
-        webbrowser.open('https://github.com/roromaniac/KH2FM-Rando-Battleship')
+        webbrowser.open('https://www.example.com/')
 
 
     def place_mode(self, row_size, col_size, blind=True):
