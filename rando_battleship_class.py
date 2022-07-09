@@ -23,6 +23,8 @@ class BattleshipBoard():
 
         # reset your own ships
         reset_ships_array = np.zeros((self.row_size, self.col_size))
+        if not os.path.isdir('ships'):
+            os.mkdir('ships')
         np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
 
         #Create & Configure root 
