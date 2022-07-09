@@ -42,10 +42,11 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 4. If you did all of the above steps successfully, you're ready to play! The button will turn gray if the check is a miss and red if the check is a hit.
 
 # Features in Development (and their expected release dates).
-1. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: 1 week.
+1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> ETA: 1-2 days.
+2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: 1 week.
 2. <ins>Clear Board</ins>: Clear the board during placement mode. ETA: 2 weeks.
-4. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks.
-5. <ins>Toggle Checks for Inclusiuon</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months.
-6. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. ETA: 1-2 months.
-7. <ins>Border Logic</ins>: Toggle to restrict ships from bordering one another. ETA: 2-3 months.
-8. <ins>Autotracking</ins>: The ability for the button to be pressed once the check is found in KH2. ETA: 2-3 months.
+3. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks.
+4. <ins>Toggle Checks for Inclusiuon</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months.
+5. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. ETA: 1-2 months.
+6. <ins>Border Logic</ins>: Toggle to restrict ships from bordering one another. ETA: 2-3 months.
+7. <ins>Autotracking</ins>: The ability for the button to be pressed once the check is found in KH2. ETA: 2-3 months.
