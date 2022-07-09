@@ -16,6 +16,15 @@ from tkinter import simpledialog
 class BattleshipBoard():
 
     def __init__(self, row_size=11, col_size=11):
+
+        # attribute setting
+        self.row_size, self.col_size = row_size, col_size
+        self.ship_sizes = [5, 4, 3, 3, 2]
+
+        # reset your own ships
+        reset_ships_array = np.zeros((self.row_size, self.col_size))
+        np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
+
         #Create & Configure root 
         self.root = Tk()
         self.root.title("Rando Battleship")
@@ -79,7 +88,8 @@ class BattleshipBoard():
     def upload(self):
 
         # unpack zip file
-        shutil.unpack_archive('ships.zip', '.', 'zip')
+        filename = fd.askopenfilename()
+        shutil.unpack_archive(filename, '.', 'zip')
         
         # load opponent ships
         opponent_ships = np.loadtxt('ships.txt')
@@ -118,8 +128,6 @@ class BattleshipBoard():
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
         random.Random(self.seedname).shuffle(self.images)
-        self.row_size, self.col_size = 11, 11
-        self.ship_sizes = [5, 4, 3, 3, 2]
         self.place_grid = np.zeros((self.row_size, self.col_size))
 
         #Create & Configure frame 
