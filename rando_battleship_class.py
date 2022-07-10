@@ -111,6 +111,11 @@ class BattleshipBoard():
                                              font=('Impact 9 bold')).place(anchor=CENTER, relx=0.5, rely=0.5)
         if os.path.exists('ships.txt'):
             os.remove('ships.txt')
+
+        self.opponent_ships_with_ids = self.find_ships(opponent_ships)
+        self.ships_left = list(range(1, int(np.max(self.opponent_ships_with_ids)) + 1))
+        self.checks_found = np.zeros((self.row_size, self.col_size))
+
         for x in range(self.row_size):
             for y in range(self.col_size):
                 hit_or_miss_color = "red" if opponent_ships[x,y] == 1 else "#0077be"
@@ -144,19 +149,33 @@ class BattleshipBoard():
             for col_index in range(self.col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
-                self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton',
-                                                                    command = lambda row_index=row_index, col_index=col_index: 
-                                                                              self.change_button_color("black", "blue", row_index, col_index, "#333333"))
+                self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")  
 
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False):
+        # place new ship if in place mode
         if placing_ship:
             self.place_ship(row_index, col_index)
+
+        # change button color
         self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
         self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                         self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
+        # check if boat is sunk and change the button colors to reflect that
+        if not placing_ship:
+            self.checks_found[row_index, col_index] = 1
+            for id in self.ships_left:
+                xs, ys = np.where(self.opponent_ships_with_ids == id)
+                if all([value == 1 for value in [ self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                    for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                        self.set_style(f"bsunk{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                        self.button_dict[(index_x, index_y)].configure(style=f"bsunk{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color("pink", "pink", row_index, col_index, current_border_color, placing_ship))
+                    self.ships_left.remove(id)
+                else:
+                    print(id, False)
 
     def copy_seed(self):
         subprocess.run("clip", universal_newlines=True, input=self.seedname)
@@ -165,6 +184,36 @@ class BattleshipBoard():
     def open_help_window(self):
         webbrowser.open('https://github.com/roromaniac/KH2FM-Rando-Battleship')
 
+
+    def find_ships(self, ship_layout):
+        num_ships_detected = 0
+        assert ship_layout.shape == (self.row_size, self.col_size), "The layout does not match the current grid shape."
+        ship_layout_with_ids = np.zeros((self.row_size, self.col_size))
+        id = 0
+        for x in range(self.row_size):
+            for y in range(self.col_size):
+                if ship_layout[x, y] == 1 and ship_layout_with_ids[x, y] == 0:
+                    id += 1
+                    ship_layout_with_ids[x, y] = id
+                    i = 1
+                    try: 
+                        while ship_layout[x + i, y] == 1:
+                            ship_layout_with_ids[x + i, y] = id
+                            i += 1
+                    except IndexError:
+                        pass
+                    try: 
+                        while ship_layout[x, y + i] == 1:
+                            ship_layout_with_ids[x, y + i] = id
+                            i += 1
+                    except IndexError:
+                        pass
+                    num_ships_detected += 1
+        
+        # run assertion that the appropriate number of ships were placed
+
+        return ship_layout_with_ids
+                            
 
     def place_mode(self, row_size, col_size, blind=True):
         # make the game blank so you can choose where to set ships
