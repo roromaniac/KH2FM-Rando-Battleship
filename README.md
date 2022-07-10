@@ -42,7 +42,7 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 4. If you did all of the above steps successfully, you're ready to play! The button will turn gray if the check is a miss and red if the check is a hit.
 
 # Features in Development (and their expected release dates).
-1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark Included in v0.9.1.
+1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark: Included in v0.9.1.
 2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: Very soon. Should be included in v0.9.2.
 2. <ins>Clear Board</ins>: Clear the board during placement mode. ETA: Very soon. Should be included in v0.9.2.
 3. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks (from 7/10/22).
