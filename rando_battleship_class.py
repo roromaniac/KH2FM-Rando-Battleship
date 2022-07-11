@@ -47,7 +47,7 @@ class BattleshipBoard():
         board_mode = Menu(menubar, tearoff = False)
         board_mode.add_command(label='Place Mode (Blind)', command=lambda: self.place_mode(self.row_size, self.col_size, blind=True))
         board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False))
-        board_mode.add_command(label='Same Board Mode', command=lambda: self.generate_same_board(self.row_size, self.col_size))
+        board_mode.add_command(label='Same Board Mode', command=lambda: self.upload(True))
         board_mode.add_command(label='Clear Placements', command=lambda blind=self.blind: self.place_mode(self.row_size, self.col_size, blind=blind))
         menubar.add_cascade(label ='Placement', menu=board_mode)
 
@@ -87,6 +87,7 @@ class BattleshipBoard():
 
     
     def generate_same_board(self, row_size, col_size):
+        random.seed(self.seedname)
         # keep track of possible ship placements
         placed_ships = np.zeros((row_size, col_size))
         possible_ship_heads = list(it.product(range(row_size), range(col_size)))
@@ -159,7 +160,8 @@ class BattleshipBoard():
                     pass   
 
         # apply hit and miss logic to start the game
-        self.upload(placed_ships)
+        self.ship_sizes = [5, 4, 3, 3, 2]
+        return placed_ships
 
 
     def download(self):
@@ -171,10 +173,10 @@ class BattleshipBoard():
         shutil.make_archive('ships/', 'zip', 'ships')
 
 
-    def upload(self, same_board=None):
+    def upload(self, same_board=False):
 
         # if you're uploading a manually placed board
-        if same_board is None:
+        if not same_board:
 
             # unpack zip file of opponent's ships
             filename = fd.askopenfilename()
@@ -189,7 +191,7 @@ class BattleshipBoard():
         # if you're using a prebuilt randomly generated board
         else:
 
-            opponent_ships = same_board
+            opponent_ships = self.generate_same_board(self.row_size, self.col_size)
 
         # load new board if there are ships to be hit
         if np.sum(opponent_ships) == 0:
@@ -211,7 +213,7 @@ class BattleshipBoard():
         for x in range(self.row_size):
             for y in range(self.col_size):
                 hit_or_miss_color = "red" if opponent_ships[x,y] == 1 else "#0077be"
-                if same_board is None:
+                if not same_board:
                     border_color = "yellow" if your_ships[x][y] == 1 else "#333333"
                     border_width = 50 if your_ships[x][y] == 1 else 10
                 else:
