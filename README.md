@@ -48,7 +48,7 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 4. <ins>Shared Board Mode</ins>: Generate a card with pre-placed ships to send to your opponent. You and your opponent can compete to clear the same board. ETA: 2 weeks (from 7/10/22)
 5. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks (from 7/10/22).
 6. <ins>Assign hotkeys to certain actions so you don't have to go through the menus.</ins> ETA: 2 weeks (from 7/10/22).
-7. <ins>Toggle Checks for Inclusiuon</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months (from 7/10/22).
+7. <ins>Toggle Checks for Inclusion</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months (from 7/10/22).
 8. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. ETA: 1-2 months (from 7/10/22).
 9. <ins>Restrictions</ins>: Validate restrictions on ships (such as number of allowable bosses, level 4 movements, etc.). ETA 1-2 months (from 7/10/22).
 10. <ins>Border Logic</ins>: Toggle to restrict ships from bordering one another. ETA: 2-3 months if at all (from 7/10/22). Seems like placing neighboring ships isn't all that desirable anyways.

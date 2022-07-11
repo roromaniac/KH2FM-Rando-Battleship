@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import webbrowser
 import ast
+import itertools as it
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -44,9 +45,10 @@ class BattleshipBoard():
 
         # Board Mode Menu
         board_mode = Menu(menubar, tearoff = False)
-        board_mode.add_command(label='Place Mode (Blind)', command=lambda row_size=row_size, col_size=col_size: self.place_mode(row_size, col_size, blind=True))
-        board_mode.add_command(label='Place Mode (Visible)', command=lambda row_size=row_size, col_size=col_size: self.place_mode(row_size, col_size, blind=False))
-        board_mode.add_command(label='Clear Placements', command=lambda row_size=row_size, col_size=col_size, blind=self.blind: self.place_mode(row_size, col_size, blind=blind))
+        board_mode.add_command(label='Place Mode (Blind)', command=lambda: self.place_mode(self.row_size, self.col_size, blind=True))
+        board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False))
+        board_mode.add_command(label='Same Board Mode', command=lambda: self.generate_same_board(self.row_size, self.col_size))
+        board_mode.add_command(label='Clear Placements', command=lambda blind=self.blind: self.place_mode(self.row_size, self.col_size, blind=blind))
         menubar.add_cascade(label ='Placement', menu=board_mode)
 
         # Action Mode Menu
@@ -84,9 +86,80 @@ class BattleshipBoard():
         return self.place_grid
 
     
-    # def generate_same_board(self, row_size, col_size):
-    #     for ship in self.ship_sizes:
-    #         pass
+    def generate_same_board(self, row_size, col_size):
+        # keep track of possible ship placements
+        placed_ships = np.zeros((row_size, col_size))
+        possible_ship_heads = list(it.product(range(row_size), range(col_size)))
+        # until you run out of ships to place...
+        while len(self.ship_sizes) != 0:
+
+            # pick a random ship
+            current_random_ship = self.ship_sizes.pop(random.choice(range(len(self.ship_sizes))))
+
+            valid_placement = False
+            while not valid_placement:
+
+                # pick a random but possible ship head placement
+                current_ship_head = random.choice(list(set(possible_ship_heads) - set(list(it.product(range(row_size - current_random_ship, row_size), range(col_size - current_random_ship, col_size))))))
+
+                # pick a random direction if 2 are possible.
+                possible_directions = []
+                if current_ship_head[0] + current_random_ship <= row_size and all(placed_ships[current_ship_head[0] + i, current_ship_head[1]] != 1 for i in range(current_random_ship)):
+                    possible_directions.append("down")
+                if current_ship_head[1] + current_random_ship <= col_size and all(placed_ships[current_ship_head[0], current_ship_head[1] + i] != 1 for i in range(current_random_ship)):
+                    possible_directions.append("right")
+                # place the ship and remove squares as possible placements going forward
+                try: 
+                    direction = random.choice(possible_directions)
+                except IndexError:
+                    continue
+                x, y = current_ship_head
+                if direction == "right":
+                    # check that you can place the ship
+                    for i in range(current_random_ship):
+                        if (x, y + i) not in possible_ship_heads:
+                            break
+                    # place the ship if possible
+                    else:
+                        valid_placement = True
+                        for i in range(current_random_ship):
+                            placed_ships[x, y + i] = 1
+                if direction == "down":
+                    # check that you can place the ship
+                    for i in range(current_random_ship):
+                        if (x + i, y) not in possible_ship_heads:
+                            break
+                    else:
+                        valid_placement = True
+                        for i in range(current_random_ship):
+                            placed_ships[x + i, y] = 1
+            xs, ys = np.where(placed_ships == 1)
+            unavailable_placements = [[xs[j], ys[j]] for j in range(len(xs))]
+            # remove squares from available placements if the index is valid
+            for square in unavailable_placements:
+                # try left
+                try:
+                    possible_ship_heads.remove((square[0], square[1] - 1))
+                except ValueError:
+                    pass
+                #try right
+                try:
+                    possible_ship_heads.remove((square[0], square[1] + 1))
+                except ValueError:
+                    pass
+                #try up
+                try:
+                    possible_ship_heads.remove((square[0] - 1, square[1]))
+                except ValueError:
+                    pass
+                #try down
+                try:
+                    possible_ship_heads.remove((square[0] + 1, square[1]))
+                except ValueError:
+                    pass   
+
+        # apply hit and miss logic to start the game
+        self.upload(placed_ships)
 
 
     def download(self):
@@ -98,17 +171,25 @@ class BattleshipBoard():
         shutil.make_archive('ships/', 'zip', 'ships')
 
 
-    def upload(self):
+    def upload(self, same_board=None):
 
-        # unpack zip file
-        filename = fd.askopenfilename()
-        shutil.unpack_archive(filename, '.', 'zip')
+        # if you're uploading a manually placed board
+        if same_board is None:
+
+            # unpack zip file of opponent's ships
+            filename = fd.askopenfilename()
+            shutil.unpack_archive(filename, '.', 'zip')
         
-        # load opponent ships
-        opponent_ships = np.loadtxt('ships.txt')
+            # load opponent ships
+            opponent_ships = np.loadtxt('ships.txt')
 
-        # load your ships
-        your_ships = np.loadtxt('ships/ships.txt')
+            # load your ships
+            your_ships = np.loadtxt('ships/ships.txt')
+
+        # if you're using a prebuilt randomly generated board
+        else:
+
+            opponent_ships = same_board
 
         # load new board if there are ships to be hit
         if np.sum(opponent_ships) == 0:
@@ -130,8 +211,12 @@ class BattleshipBoard():
         for x in range(self.row_size):
             for y in range(self.col_size):
                 hit_or_miss_color = "red" if opponent_ships[x,y] == 1 else "#0077be"
-                border_color = "yellow" if your_ships[x][y] == 1 else "#333333"
-                border_width = 50 if your_ships[x][y] == 1 else 10
+                if same_board is None:
+                    border_color = "yellow" if your_ships[x][y] == 1 else "#333333"
+                    border_width = 50 if your_ships[x][y] == 1 else 10
+                else:
+                    border_color = "#333333"
+                    border_width = 10
                 self.set_style(f"bloaded{x}{y}.TButton", background="black", bordercolor=border_color, highlightthickness=border_width, padding=0)
                 self.button_dict[(x,y)].configure(style=f"bloaded{x}{y}.TButton", command = lambda row_index=x, col_index=y, hit_or_miss_color=hit_or_miss_color, current_border_color=border_color:
                                                                                self.change_button_color("black", hit_or_miss_color, row_index, col_index, current_border_color, False))
@@ -184,10 +269,7 @@ class BattleshipBoard():
                         self.set_style(f"bsunk{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
                         self.button_dict[(index_x, index_y)].configure(style=f"bsunk{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                             self.change_button_color("pink", "pink", row_index, col_index, current_border_color, placing_ship))
-                    print(id, True)
                     self.ships_left.remove(id)
-                else:
-                    print(id, False)
 
     def copy_seed(self):
         subprocess.run("clip", universal_newlines=True, input=f"({self.row_size}, {self.col_size}, '{self.seedname}')")
@@ -228,10 +310,8 @@ class BattleshipBoard():
                     except IndexError:
                         pass
                     num_ships_detected += 1
-                    print(ship_layout_with_ids)
         # run assertion that the appropriate number of ships were placed
         
-
         return ship_layout_with_ids
 
     
