@@ -43,10 +43,10 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 
 # Features in Development (and their expected release dates).
 1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark: Included in v0.9.1.
-2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. ETA: Very soon. Should be included in v0.9.2.
-3. <ins>Clear Board</ins>: Clear the board during placement mode. ETA: Very soon. Should be included in v0.9.2.
-4. <ins>Shared Board Mode</ins>: Generate a card with pre-placed ships to send to your opponent. You and your opponent can compete to clear the same board. ETA: 2 weeks (from 7/10/22)
-5. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. ETA: 2 weeks (from 7/10/22).
+2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. :white_check_mark: Included in v1.0.0.
+3. <ins>Clear Board</ins>: Clear the board during placement mode. :white_check_mark: Included in v1.0.0.
+4. <ins>Shared Board Mode</ins>: Generate a card with pre-placed ships to send to your opponent. You and your opponent can compete to clear the same board. :white_check_mark: Included in v1.0.0.
+5. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. :white_check_mark: Included in v1.0.0.
 6. <ins>Assign hotkeys to certain actions so you don't have to go through the menus.</ins> ETA: 2 weeks (from 7/10/22).
 7. <ins>Toggle Checks for Inclusion</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months (from 7/10/22).
 8. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. ETA: 1-2 months (from 7/10/22).
