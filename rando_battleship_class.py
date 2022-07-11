@@ -9,6 +9,7 @@ import string
 import subprocess
 import shutil
 import webbrowser
+import ast
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -31,23 +32,28 @@ class BattleshipBoard():
         self.root = Tk()
         self.root.title("Rando Battleship")
 
-        self.generate_card()
+        self.generate_card(self.row_size, self.col_size)
 
         self.root.geometry("700x700")
         # Creating Menubar
         menubar = Menu(self.root)
         self.root.config(menu=menubar)
 
+        # board is initially visible so set blind to false
+        self.blind = False
+
         # Board Mode Menu
         board_mode = Menu(menubar, tearoff = False)
         board_mode.add_command(label='Place Mode (Blind)', command=lambda row_size=row_size, col_size=col_size: self.place_mode(row_size, col_size, blind=True))
         board_mode.add_command(label='Place Mode (Visible)', command=lambda row_size=row_size, col_size=col_size: self.place_mode(row_size, col_size, blind=False))
-        menubar.add_cascade(label ='Board Mode', menu=board_mode)
+        board_mode.add_command(label='Clear Placements', command=lambda row_size=row_size, col_size=col_size, blind=self.blind: self.place_mode(row_size, col_size, blind=blind))
+        menubar.add_cascade(label ='Placement', menu=board_mode)
 
         # Action Mode Menu
         actions = Menu(menubar, tearoff = False)
-        actions.add_command(label = 'Generate New Card', command=self.generate_card)
+        actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size))
         actions.add_command(label = 'Load Card from Seed', command=self.change_seedname)
+        actions.add_command(label = 'Resize Grid', command=self.resize_grid)
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed)
         actions.add_command(label = 'Upload Ship Layout', command=self.upload)
         actions.add_command(label = 'Download Ship Layout', command=self.download)
@@ -67,8 +73,8 @@ class BattleshipBoard():
 
 
     def change_seedname(self):
-        self.seedname = simpledialog.askstring(title="Seed", prompt="Seed Name: ", initialvalue=f'{self.seedname}')
-        self.generate_card(self.seedname)
+        self.row_size, self.col_size, self.seedname = ast.literal_eval(simpledialog.askstring(title="Seed", prompt="Seed Name: ", initialvalue=f"({self.row_size}, {self.col_size}, '{self.seedname}')"))
+        self.generate_card(self.row_size, self.col_size, self.seedname)
         self.info.entryconfig(0, label=f'Seedname: {self.seedname}')
 
 
@@ -76,6 +82,11 @@ class BattleshipBoard():
         self.place_grid[x,y] = 1 - self.place_grid[x,y]
         print(self.place_grid)
         return self.place_grid
+
+    
+    # def generate_same_board(self, row_size, col_size):
+    #     for ship in self.ship_sizes:
+    #         pass
 
 
     def download(self):
@@ -126,7 +137,7 @@ class BattleshipBoard():
                                                                                self.change_button_color("black", hit_or_miss_color, row_index, col_index, current_border_color, False))
 
 
-    def generate_card(self, seedname=None):
+    def generate_card(self, row_size, col_size, seedname=None):
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
 
@@ -135,7 +146,7 @@ class BattleshipBoard():
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
         random.Random(self.seedname).shuffle(self.images)
-        self.place_grid = np.zeros((self.row_size, self.col_size))
+        self.place_grid = np.zeros((row_size, col_size))
 
         #Create & Configure frame 
         self.frame=Frame(self.root)
@@ -144,9 +155,9 @@ class BattleshipBoard():
         self.button_dict = {}
 
         #Create a (rows x columns) grid of buttons inside the frame
-        for row_index in range(self.row_size):
+        for row_index in range(row_size):
             Grid.rowconfigure(self.frame, row_index, weight=1)
-            for col_index in range(self.col_size):
+            for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
@@ -173,12 +184,13 @@ class BattleshipBoard():
                         self.set_style(f"bsunk{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
                         self.button_dict[(index_x, index_y)].configure(style=f"bsunk{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                             self.change_button_color("pink", "pink", row_index, col_index, current_border_color, placing_ship))
+                    print(id, True)
                     self.ships_left.remove(id)
                 else:
                     print(id, False)
 
     def copy_seed(self):
-        subprocess.run("clip", universal_newlines=True, input=self.seedname)
+        subprocess.run("clip", universal_newlines=True, input=f"({self.row_size}, {self.col_size}, '{self.seedname}')")
 
 
     def open_help_window(self):
@@ -197,26 +209,52 @@ class BattleshipBoard():
                     ship_layout_with_ids[x, y] = id
                     i = 1
                     try: 
-                        while ship_layout[x + i, y] == 1:
-                            ship_layout_with_ids[x + i, y] = id
-                            i += 1
+                        while x + i < self.row_size:
+                            if ship_layout[x + i, y] == 1:
+                                ship_layout_with_ids[x + i, y] = id
+                                i += 1
+                            else:
+                                break
                     except IndexError:
                         pass
+                    i = 1
                     try: 
-                        while ship_layout[x, y + i] == 1:
-                            ship_layout_with_ids[x, y + i] = id
-                            i += 1
+                        while y + i < self.col_size:
+                            if ship_layout[x, y + i] == 1:
+                                ship_layout_with_ids[x, y + i] = id
+                                i += 1
+                            else:
+                                break
                     except IndexError:
                         pass
                     num_ships_detected += 1
-        
+                    print(ship_layout_with_ids)
         # run assertion that the appropriate number of ships were placed
+        
 
         return ship_layout_with_ids
+
+    
+    def resize_grid(self):
+
+        row_size = simpledialog.askstring(title="Row Dimension", prompt="Row Dimension: ", initialvalue=11)
+        col_size = simpledialog.askstring(title="Column Dimension", prompt="Column Dimension: ", initialvalue=11)
+        try:
+            int(row_size)
+            int(col_size)
+        except TypeError:
+            pass
+            # create popup window that says sizes should be integers
+        self.row_size, self.col_size = int(row_size), int(col_size)
+        self.generate_card(self.row_size, self.col_size)
+        
                             
 
     def place_mode(self, row_size, col_size, blind=True):
         # make the game blank so you can choose where to set ships
+        self.blind = blind
+        # entering place mode resets the grid
+        self.place_grid = np.zeros((row_size, col_size))
         for row_index in range(row_size):
             Grid.rowconfigure(self.frame, row_index, weight=1)
             for col_index in range(col_size):
