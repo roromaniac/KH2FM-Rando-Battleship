@@ -36,10 +36,8 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
    The button will turn gray if the check is a miss and red if the check is a hit.
    
 # Single Board Mode
-1. Have a mutual party generate a battleship board and send you the zip.
-2. When you receive the ships.zip file, move it into the same folder you have the rando_battleship.exe.
-3. To get the ship data tracked, go to "Actions" -> "Upload Ship Layout" and select the "ships.zip" file you just received.
-4. If you did all of the above steps successfully, you're ready to play! The button will turn gray if the check is a miss and red if the check is a hit.
+1. Generate a new card and send the seedname to anyone who wants to partake.
+2. ALL players should select "Board Mode" -> "Same Board Mode". Now all players have the same battleships hidden but loaded.
 
 # Features in Development (and their expected release dates).
 1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark: Included in v0.9.1.
