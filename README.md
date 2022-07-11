@@ -53,3 +53,22 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 11. <ins>Border Logic</ins>: Toggle to restrict ships from bordering one another. ETA: 2-3 months if at all (from 7/10/22). Seems like placing neighboring ships isn't all that desirable anyways.
 12. <ins>Autotracking</ins>: The ability for the button to be pressed once the check is found in KH2. ETA: 2-3 months (from 7/10/22).
 13. <ins>Include icons with Xs to indicate sunken checks.</ins> ETA: ? Whenever someone wants to develop those icons.
+
+# Credits
+
+### Battleship Format Creator
+* Ryujin
+
+### Dev Consultants
+
+* codename_geek
+* DA/o0DemonBoy0o
+
+### Play Testers
+
+* iiSalad
+* Metthaios
+* Lagg018
+* cdrom1019
+* Glint
+* WallpeSH
