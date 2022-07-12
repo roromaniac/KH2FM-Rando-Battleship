@@ -65,6 +65,7 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 ### Dev Consultants
 
 * roromaniac
+* TopazTK
 * codename_geek
 * DA/o0DemonBoy0o
 
