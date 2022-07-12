@@ -59,8 +59,12 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 ### Battleship Format Creator
 * Ryujin
 
+### Icon Developer
+* Televo
+
 ### Dev Consultants
 
+* roromaniac
 * codename_geek
 * DA/o0DemonBoy0o
 
