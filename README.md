@@ -45,8 +45,8 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 3. <ins>Clear Board</ins>: Clear the board during placement mode. :white_check_mark: Included in v1.0.0.
 4. <ins>Shared Board Mode</ins>: Generate a card with pre-placed ships to send to your opponent. You and your opponent can compete to clear the same board. :white_check_mark: Included in v1.0.0.
 5. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. :white_check_mark: Included in v1.0.0.
-6. <ins>Image and Window Quality</ins>: Make errors popout windows and improve image/window size quality with changing grid size. ETA: 2-3 days (from 7/11/22). Should be in v1.0.1.
-7. <ins>Assign hotkeys to certain actions so you don't have to go through the menus.</ins> ETA: 2 weeks (from 7/10/22).
+6. <ins>Image and Window Quality</ins>: Make errors popout windows and improve image/window size quality with changing grid size. ETA: 2-3 days (from 7/11/22). Partially included in v1.0.1.
+7. <ins>Assign hotkeys to certain actions so you don't have to go through the menus.</ins> :white_check_mark: Included in v1.0.1.
 8. <ins>Toggle Checks for Inclusion</ins>: Toggle checks to be allowed in the pool of checks for battleship. ETA: 1-2 months (from 7/10/22).
 9. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. ETA: 1-2 months (from 7/10/22).
 10. <ins>Restrictions</ins>: Validate restrictions on ships (such as number of allowable bosses, level 4 movements, etc.). ETA 1-2 months (from 7/10/22).
