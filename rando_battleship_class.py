@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import webbrowser
 import ast
+import json
 import itertools as it
 
 from tkinter import filedialog as fd
@@ -23,6 +24,30 @@ class BattleshipBoard():
         self.row_size, self.col_size = row_size, col_size
         self.ship_sizes = [5, 4, 3, 3, 2]
 
+        # checks allowed on grid
+        self.check_types = [ 
+                                'report', 
+                                'magic1',
+                                'magic2',
+                                'magic3', 
+                                'movement1', 
+                                'movement2',
+                                'movement3', 
+                                'movement4', 
+                                'story_boss', 
+                                'sc/om',  
+                                'form',
+                                'tornpage',
+                                'summon', 
+                                'proof',
+                                'progression',
+                                'promise',
+                                'extra', 
+                                'armored_xemnas', 
+                                'as',        
+                                'sephiroth', 
+                                'terra'
+                            ]
         # reset your own ships
         reset_ships_array = np.zeros((self.row_size, self.col_size))
         if not os.path.isdir('ships'):
@@ -31,7 +56,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v1.0.1)")
+        self.root.title("Rando Battleship (v1.0.2)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -61,9 +86,9 @@ class BattleshipBoard():
         # Board Mode Menu
         board_mode = Menu(menubar, tearoff = False)
         board_mode.add_command(label='Place Mode (Blind)', underline=5, command=lambda: self.place_mode(self.row_size, self.col_size, blind=True), accelerator="Ctrl+B")
-        board_mode.add_command(label='Place Mode (Visible)', command=lambda : lambda : self.place_mode(self.row_size, self.col_size, blind=False), accelerator="Ctrl+V")
+        board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False), accelerator="Ctrl+V")
         board_mode.add_command(label='Same Board Mode', command=lambda: self.upload(True), accelerator="Ctrl+S")
-        board_mode.add_command(label='Clear Placements', command=lambda blind=self.blind: self.place_mode(self.row_size, self.col_size, blind=blind), accelerator="Ctrl+C")
+        board_mode.add_command(label='Clear Placements', command=lambda: self.place_mode(self.row_size, self.col_size, blind=self.blind), accelerator="Ctrl+C")
         menubar.add_cascade(label ='Placement', menu=board_mode)
 
         # Action Mode Menu
@@ -74,7 +99,16 @@ class BattleshipBoard():
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Upload Ship Layout', command=self.upload, accelerator="Ctrl+U")
         actions.add_command(label = 'Download Ship Layout', command=self.download, accelerator="Ctrl+D")
+        actions.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
+        actions.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
+        actions.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
         menubar.add_cascade(label = 'Actions', menu=actions)
+
+        # Validation Mode Menu
+        validations = Menu(menubar, tearoff = False)
+        validations.add_command(label = 'Validate Your Ships', command=self.validate_self_ships)
+        validations.add_command(label = 'Validate Opponent/Shared Ships', command=self.validate_opponent_ships)
+        menubar.add_cascade(label = "Validate", menu=validations)
 
         # Information Menu
         self.info = Menu(menubar, tearoff=False)
@@ -221,6 +255,8 @@ class BattleshipBoard():
                                              by placing the board in place mode and downloading 
                                              the ship layout.''',
                                              font=('Impact 9 bold')).place(anchor=CENTER, relx=0.5, rely=0.5)
+        
+        # remove opponent ships file to avoid cheating
         if os.path.exists('ships.txt'):
             os.remove('ships.txt')
 
@@ -247,11 +283,16 @@ class BattleshipBoard():
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
 
-        # battleship settings (images and sizes)
-        self.images = [ImageTk.PhotoImage(Image.open(f"img/{x}").resize((40,40))) for x in os.listdir("img")]
+        # battleship settings (images and sizes) and randomization
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
-        random.Random(self.seedname).shuffle(self.images)
+        if not hasattr(self, 'check_names'):
+            self.check_names = [x for x in os.listdir("img")]
+        random.Random(self.seedname).shuffle(self.check_names)
+        self.images = [ImageTk.PhotoImage(Image.open(f"img/{check}").resize((40,40))) for check in self.check_names]
+        with open("img.json", "r") as checktypes_json:
+            checktypes_dict = json.load(checktypes_json)
+            self.labels = [checktypes_dict[check] for check in self.check_names]
         self.place_grid = np.zeros((row_size, col_size))
 
         #Create & Configure frame 
@@ -301,7 +342,7 @@ class BattleshipBoard():
         webbrowser.open('https://github.com/roromaniac/KH2FM-Rando-Battleship')
 
 
-    def find_ships(self, ship_layout, event=None):
+    def find_ships(self, ship_layout):
         num_ships_detected = 0
         assert ship_layout.shape == (self.row_size, self.col_size), "The layout does not match the current grid shape."
         ship_layout_with_ids = np.zeros((self.row_size, self.col_size))
@@ -367,6 +408,217 @@ class BattleshipBoard():
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*row_size + col_index], style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky=N+S+E+W)
 
+
+    def set_ship_sizes(self, entries, window):
+        self.ship_sizes = list(it.chain(*[[i] * int(entries[i].get()) if entries[i].get() != "" else [] for i in range(1, max(self.row_size, self.col_size) + 1)]))
+        print(self.ship_sizes)
+        window.destroy()
+
+
+    def ship_setter_window(self):
+        window = Tk() 
+        window.title("Ship Size Setting")
+
+        TitleLabel = ttk.Label(window, text = "Quantity")
+        TitleLabel.grid(row = 0, column = 1)
+
+        labels = {}
+        entries = {}
+
+        max_dim = max(self.row_size, self.col_size) + 1
+
+        for i in range(1, max_dim):
+
+            labels[i] = ttk.Label(window, text = f"# of {i} ships")
+            labels[i].grid(row = i, column = 0)
+
+            entries[i] = ttk.Entry(window, width = 5)
+            entries[i].grid(row = i, column = 1)
+
+        btn = ttk.Button(window, text = "Submit Answers", command = lambda: self.set_ship_sizes(entries, window))
+        btn.grid(row = i+1, column = 1)
+
+
+    def set_checks(self, entries, window, gen_card=True):
+        self.check_names = [x for x in os.listdir("img")]
+        with open("img.json", "r") as checktypes_json:
+            checktypes_dict = json.load(checktypes_json)
+            self.labels = [checktypes_dict[check] for check in self.check_names]
+        valid_types = [self.check_types[i] for i in range(len(self.check_types)) if entries[i + 1].instate(['selected'])]
+        valid_checks = [True if x in valid_types else False for x in self.labels]
+        self.check_names = [x for (x, include) in zip(self.check_names, valid_checks) if include]
+        print(len(self.check_names))
+        self.row_size, self.col_size = [int(np.floor(np.sqrt(len(self.check_names))))] * 2
+        if gen_card:
+            self.generate_card(self.row_size, self.col_size)
+        window.destroy()
+
+
+    def check_inclusion_window(self):
+        # code that will remove checks from the grid pool
+        window = Tk() 
+        window.title("Check Inclusion Toggles")
+
+        TitleLabel = ttk.Label(window, text = "Include?")
+        TitleLabel.grid(row = 0, column = 1)
+
+        check_type_labels = ["Reports", 
+                             "Lvl 1 Magic", 
+                             "Lvl 2 Magic", 
+                             "Lvl 3 Magic", 
+                             "Lvl 1 Movement", 
+                             "Lvl 2 Movement", 
+                             "Lvl 3 Movement", 
+                             "Lvl 4 Movement", 
+                             "Story Bosses", 
+                             "Second Chance/Once More", 
+                             "Drive Forms", 
+                             "Torn Pages", 
+                             "Summons", 
+                             "Proofs", 
+                             "World Progression Icons",
+                             "Promise Charm",
+                             "Extra Checks",
+                             "Armored Xemnas",
+                             "Absent Silhouettes",
+                             "Sephiroth",
+                             "Lingering Will"] 
+
+        labels = {}
+        entries = {}
+
+        num_rows = len(check_type_labels) + 1
+
+        for i in range(1, num_rows):
+
+            labels[i] = ttk.Label(window, text = check_type_labels[i - 1], anchor='w', takefocus=False)
+            labels[i].grid(row = i, column = 0)
+
+            # have toggle checked by default
+            entries[i] = ttk.Checkbutton(window, cursor=None)
+            entries[i].state(["!alternate"])
+            entries[i].state(["selected"])
+            entries[i].grid(row = i, column = 1)
+
+        btn0 = ttk.Button(window, text = "Update Card with These Settings", command = lambda: self.set_checks(entries, window, gen_card=True))
+        btn0.grid(row = i+1, column = 0)
+
+        btn1 = ttk.Button(window, text = "Submit Toggles", command = lambda: self.set_checks(entries, window, gen_card=False))
+        btn1.grid(row = i+1, column = 1)
+
+
+    def set_restrictions(self, entries, window):
+        restriction_values = [int(entries[i].get()) for i in range(1, len(entries.keys()) + 1)]
+        quantitative_check_labels = [
+            'report', 
+            'magic1',
+            'magic2',
+            'magic3', 
+            'movement1', 
+            'movement2',
+            'movement3', 
+            'movement4', 
+            'story_boss', 
+            'sc/om',  
+            'form',
+            'tornpage',
+            'summon', 
+            'proof',
+            'progression',
+            'as',        
+        ]
+        self.restrictions = {}
+        for i in range(len(restriction_values)):
+            self.restrictions[quantitative_check_labels[i]] = restriction_values[i]
+        window.destroy()
+
+
+    def check_restriction_window(self):
+        window = Tk() 
+        window.title("Ship Placement Restrictions")
+
+        TitleLabel = ttk.Label(window, text = "Quantity")
+        TitleLabel.grid(row = 0, column = 1)
+
+        labels = {}
+        entries = {}
+
+        quantitative_check_type_labels = ["Reports", 
+                                          "Lvl 1 Magic", 
+                                          "Lvl 2 Magic", 
+                                          "Lvl 3 Magic", 
+                                          "Lvl 1 Movement", 
+                                          "Lvl 2 Movement", 
+                                          "Lvl 3 Movement", 
+                                          "Lvl 4 Movement", 
+                                          "Story Bosses", 
+                                          "Second Chance/Once More", 
+                                          "Drive Forms", 
+                                          "Torn Pages", 
+                                          "Summons", 
+                                          "Proofs", 
+                                          "World Progression Icons",
+                                          "Absent Silhouettes",
+                                        ]
+
+        checktype_index_to_quantity_dict = {
+            0: 13,
+            1: 6,
+            2: 6, 
+            3: 6,
+            4: 5,
+            5: 5,
+            6: 5,
+            7: 5,
+            8: 31,
+            9: 2,
+            10: 5,
+            11: 5,
+            12: 4,
+            13: 3,
+            14: 11,
+            15: 5,
+        }
+
+        for i in range(1, len(quantitative_check_type_labels) + 1):
+
+            labels[i] = ttk.Label(window, text = f"{quantitative_check_type_labels[i - 1]}")
+            labels[i].grid(row = i, column = 0)
+
+            entries[i] = ttk.Entry(window, width = 5)
+            entries[i].insert(0, checktype_index_to_quantity_dict[i - 1])
+            entries[i].grid(row = i, column = 1)
+
+        btn = ttk.Button(window, text = "Submit Answers", command = lambda: self.set_restrictions(entries, window))
+        btn.grid(row = i+1, column = 1)
+
+
+    def validate_self_ships(self):
+        ship_layout = np.loadtxt('ships/ships.txt')
+        ship_layout_with_ids = self.find_ships(ship_layout)
+        self.validate_ships(ship_layout_with_ids)
+
+
+    def validate_opponent_ships(self):
+        self.validate_ships(self.opponent_ships_with_ids)
+
+        # add feature for checking for neighbors
+
+        # add feature for validating types
+    
+
+    def validate_ships(self, ship_layout_with_ids):
+        ships_found = []
+        for ship_id in range(1, int(np.max(ship_layout_with_ids)) + 1):
+            ships_found.append(np.sum(ship_layout_with_ids == ship_id))
+        if not sorted(ships_found) == sorted(self.ship_sizes):
+            print(f"The ships you placed are {sorted(ships_found)} but they need to be {sorted(self.ship_sizes)}")
+        else:
+            print(f"Ships look good!")
+
+        # add feature for checking for neighbors
+
+        # add feature for validating types
 
 
 BattleshipBoard() 
