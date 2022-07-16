@@ -143,6 +143,12 @@ class BattleshipBoard():
         # keep track of possible ship placements
         placed_ships = np.zeros((row_size, col_size))
         possible_ship_heads = list(it.product(range(row_size), range(col_size)))
+        ship_data = [x for x in self.ship_sizes]
+        if hasattr(self, 'restrictions'):
+            restrictions_tracker = {}
+            for check_type in self.restrictions.keys():
+                restrictions_tracker[check_type] = 0
+
         # until you run out of ships to place...
         while len(self.ship_sizes) != 0:
 
@@ -161,6 +167,7 @@ class BattleshipBoard():
                     possible_directions.append("down")
                 if current_ship_head[1] + current_random_ship <= col_size and all(placed_ships[current_ship_head[0], current_ship_head[1] + i] != 1 for i in range(current_random_ship)):
                     possible_directions.append("right")
+                
                 # place the ship and remove squares as possible placements going forward
                 try: 
                     direction = random.choice(possible_directions)
@@ -172,20 +179,33 @@ class BattleshipBoard():
                     for i in range(current_random_ship):
                         if (x, y + i) not in possible_ship_heads:
                             break
+                        if hasattr(self, 'restrictions'):
+                            if ((x * self.row_size + (y + i)) < len(self.labels)) and (self.labels[x * self.row_size + (y + i)] in self.restrictions.keys()):
+                                if restrictions_tracker[self.labels[x * self.row_size + (y + i)]] + 1 > self.restrictions[self.labels[x * self.row_size + (y + i)]]:
+                                    break
                     # place the ship if possible
                     else:
                         valid_placement = True
                         for i in range(current_random_ship):
                             placed_ships[x, y + i] = 1
+                            if hasattr(self, 'restrictions') and (self.labels[x * self.row_size + (y + i)] in self.restrictions.keys()):
+                                restrictions_tracker[self.labels[x * self.row_size + (y + i)]] += 1
                 if direction == "down":
                     # check that you can place the ship
                     for i in range(current_random_ship):
                         if (x + i, y) not in possible_ship_heads:
                             break
+                        if hasattr(self, 'restrictions'):
+                            if (((x + i) * self.row_size + y) < len(self.labels)) and (self.labels[(x + i) * self.row_size + y] in self.restrictions.keys()):
+                                if restrictions_tracker[self.labels[(x + i) * self.row_size + y]] + 1 > self.restrictions[self.labels[(x + i) * self.row_size + y]]:
+                                    break
                     else:
                         valid_placement = True
                         for i in range(current_random_ship):
                             placed_ships[x + i, y] = 1
+                            if hasattr(self, 'restrictions') and (self.labels[(x + i) * self.row_size + y] in self.restrictions.keys()):
+                                restrictions_tracker[self.labels[(x + i) * self.row_size + y]] += 1
+                # print(restrictions_tracker)
             xs, ys = np.where(placed_ships == 1)
             unavailable_placements = [[xs[j], ys[j]] for j in range(len(xs))]
             # remove squares from available placements if the index is valid
@@ -212,7 +232,7 @@ class BattleshipBoard():
                     pass   
 
         # apply hit and miss logic to start the game
-        self.ship_sizes = [5, 4, 3, 3, 2]
+        self.ship_sizes = ship_data
         return placed_ships
 
 
@@ -309,6 +329,15 @@ class BattleshipBoard():
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
+
+        # print(len(self.check_names))
+        # print(set(x[:-5] for x in self.check_names[row_size * col_size:]))
+        # print(set(x[:-5] for x in os.listdir('img')))
+        checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
+        print("------------------------------------------------")
+        print("New Card Generation Detected: Checks Removed are")
+        print("------------------------------------------------")
+        [print(removed_check) for removed_check in list(checks_not_included)]
 
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None):
@@ -600,25 +629,79 @@ class BattleshipBoard():
 
 
     def validate_opponent_ships(self):
+        if not hasattr(self, 'opponent_ships_with_ids'):
+            raise AttributeError("You probably did not load your opponent's ships or put the board in single board mode.")
         self.validate_ships(self.opponent_ships_with_ids)
-
-        # add feature for checking for neighbors
-
-        # add feature for validating types
     
 
     def validate_ships(self, ship_layout_with_ids):
         ships_found = []
         for ship_id in range(1, int(np.max(ship_layout_with_ids)) + 1):
             ships_found.append(np.sum(ship_layout_with_ids == ship_id))
+        print_success = True
         if not sorted(ships_found) == sorted(self.ship_sizes):
             print(f"The ships you placed are {sorted(ships_found)} but they need to be {sorted(self.ship_sizes)}")
-        else:
-            print(f"Ships look good!")
+            print_success = False
 
         # add feature for checking for neighbors
-
+        for ship_id in range(1, int(np.max(ship_layout_with_ids)) + 1):
+            xs, ys = np.where(ship_layout_with_ids == ship_id)
+            current_ship_id_locations = [[xs[j], ys[j]] for j in range(len(xs))]
+            for square in current_ship_id_locations:
+                # try left
+                try:
+                    if ship_layout_with_ids[square[0], square[1] - 1] > ship_id:
+                        print("You have neighboring ships.")
+                        print_success = False
+                        break
+                except IndexError:
+                    pass
+                #try right
+                try:
+                    if ship_layout_with_ids[square[0], square[1] + 1] > ship_id:
+                        print("You have neighboring ships.")
+                        print_success = False
+                        break
+                except IndexError:
+                    pass
+                #try up
+                try:
+                    if ship_layout_with_ids[square[0] - 1, square[1]] > ship_id:
+                        print("You have neighboring ships.")
+                        print_success = False
+                        break
+                except IndexError:
+                    pass
+                #try down
+                try:
+                    if ship_layout_with_ids[square[0] + 1, square[1]] > ship_id:
+                        print("You have neighboring ships.")
+                        print_success = False
+                        break
+                except IndexError:
+                    pass
+   
         # add feature for validating types
+        if hasattr(self, 'restrictions'):
+            xs, ys = np.where(ship_layout_with_ids >= 1)
+            ship_locations = [[xs[j], ys[j]] for j in range(len(xs))]
+            check_types_on_ships = {}
+            for x, y in ship_locations:
+                current_label = self.labels[x * self.row_size + y]
+                if current_label not in check_types_on_ships.keys():
+                    check_types_on_ships[current_label] = 1
+                else:
+                    check_types_on_ships[current_label] += 1
+
+            for check_type in check_types_on_ships.keys():
+                if (check_type in self.restrictions.keys()) and (check_types_on_ships[check_type] > self.restrictions[check_type]):
+                    print(f"You have too many checks of type {check_type} across your ships. Please remove some and try again.")
+                    print_success = False  
+                    break
+
+        # if no errors detected, print ships look good
+        if print_success:
+            print(f"Ships look good!")
 
 
 BattleshipBoard() 
