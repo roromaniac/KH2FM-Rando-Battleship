@@ -331,9 +331,7 @@ class BattleshipBoard():
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
 
-        # print(set(x[:-5] for x in self.check_names))
-        # print(set(x[:-5] for x in self.check_names[row_size * col_size:]))
-        # print(set(x[:-5] for x in os.listdir('img')))
+        # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
         checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
         print("------------------------------------------------")
         print("New Card Generation Detected: Checks Removed are")
