@@ -306,8 +306,9 @@ class BattleshipBoard():
         # battleship settings (images and sizes) and randomization
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
-        if not hasattr(self, 'check_names'):
-            self.check_names = [x for x in os.listdir("img")]
+        self.check_names = [x for x in os.listdir("img")]
+        if hasattr(self, 'restrictions'):
+            self.check_names = [self.check_names[i] for i in range(len(self.check_names)) if (self.labels[i] in self.restrictions.keys())]
         random.Random(self.seedname).shuffle(self.check_names)
         self.images = [ImageTk.PhotoImage(Image.open(f"img/{check}").resize((40,40))) for check in self.check_names]
         with open("img.json", "r") as checktypes_json:
@@ -330,7 +331,7 @@ class BattleshipBoard():
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
 
-        # print(len(self.check_names))
+        # print(set(x[:-5] for x in self.check_names))
         # print(set(x[:-5] for x in self.check_names[row_size * col_size:]))
         # print(set(x[:-5] for x in os.listdir('img')))
         checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
