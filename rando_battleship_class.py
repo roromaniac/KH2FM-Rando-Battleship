@@ -98,12 +98,17 @@ class BattleshipBoard():
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Upload Ship Layout', command=self.upload, accelerator="Ctrl+U")
         actions.add_command(label = 'Download Ship Layout', command=self.download, accelerator="Ctrl+D")
-        actions.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
-        actions.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
-        actions.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
         actions.add_command(label = 'Download Board Settings', command=self.save_settings)
         actions.add_command(label = 'Upload Board Settings', command=self.load_settings)
         menubar.add_cascade(label = 'Actions', menu=actions)
+
+        # Customize Mode Menu
+        customize = Menu(menubar, tearoff = False)
+        customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
+        customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
+        customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
+        menubar.add_cascade(label = 'Customize', menu=customize)
+
 
         # Validation Mode Menu
         validations = Menu(menubar, tearoff = False)
