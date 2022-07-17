@@ -56,7 +56,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v1.0.2)")
+        self.root.title("Rando Battleship (v1.1.0)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -67,7 +67,6 @@ class BattleshipBoard():
         self.root.bind_all("<Control-s>", lambda event: self.upload(True))
         self.root.bind_all("<Control-c>", lambda event: self.place_mode(self.row_size, self.col_size, blind=self.blind))
         self.root.bind_all("<Control-g>", lambda event: self.generate_card(self.row_size, self.col_size))
-        self.root.bind_all("<Control-l>", self.change_seedname)
         self.root.bind_all("<Control-r>", self.resize_grid)
         self.root.bind_all("<Control-i>", self.copy_seed)
         self.root.bind_all("<Control-u>", lambda event: self.upload(False))
@@ -94,7 +93,7 @@ class BattleshipBoard():
         # Action Mode Menu
         actions = Menu(menubar, tearoff = False)
         actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size), accelerator="Ctrl+G")
-        actions.add_command(label = 'Load Card from Seed', command=self.change_seedname, accelerator="Ctrl+L")
+        actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: ")))
         actions.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Upload Ship Layout', command=self.upload, accelerator="Ctrl+U")
@@ -102,6 +101,8 @@ class BattleshipBoard():
         actions.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         actions.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         actions.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
+        actions.add_command(label = 'Download Board Settings', command=self.save_settings)
+        actions.add_command(label = 'Upload Board Settings', command=self.load_settings)
         menubar.add_cascade(label = 'Actions', menu=actions)
 
         # Validation Mode Menu
@@ -112,7 +113,6 @@ class BattleshipBoard():
 
         # Information Menu
         self.info = Menu(menubar, tearoff=False)
-        self.info.add_command(label = f"Seedname: {self.seedname}", command=self.copy_seed, accelerator="Ctrl+I")
         self.info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
         menubar.add_cascade(label = 'Info', menu=self.info)
 
@@ -126,10 +126,8 @@ class BattleshipBoard():
         style.configure(name, background=background, bordercolor=bordercolor, highlightthickness=highlightthickness, padding=padding, relief=SOLID)
 
 
-    def change_seedname(self, event=None):
-        self.row_size, self.col_size, self.seedname = ast.literal_eval(simpledialog.askstring(title="Seed", prompt="Seed Name: " + " "*53, initialvalue=f"({self.row_size}, {self.col_size}, '{self.seedname}')"))
-        self.generate_card(self.row_size, self.col_size, self.seedname)
-        self.info.entryconfig(0, label=f'Seedname: {self.seedname}')
+    def set_seedname(self, new_seedname):
+        self.seedname = new_seedname
 
 
     def place_ship(self, x, y, event=None):
@@ -159,7 +157,7 @@ class BattleshipBoard():
             while not valid_placement:
 
                 # pick a random but possible ship head placement
-                current_ship_head = random.choice(list(set(possible_ship_heads) - set(list(it.product(range(row_size - current_random_ship, row_size), range(col_size - current_random_ship, col_size))))))
+                current_ship_head = random.choice(list(set(possible_ship_heads) - set(list(it.product(range(row_size - current_random_ship + 1, row_size), range(col_size - current_random_ship + 1, col_size))))))
 
                 # pick a random direction if 2 are possible.
                 possible_directions = []
@@ -307,8 +305,8 @@ class BattleshipBoard():
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
         self.check_names = [x for x in os.listdir("img")]
-        if hasattr(self, 'restrictions'):
-            self.check_names = [self.check_names[i] for i in range(len(self.check_names)) if (self.labels[i] in self.restrictions.keys())]
+        if hasattr(self, 'valid_checks'):
+            self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
         random.Random(self.seedname).shuffle(self.check_names)
         self.images = [ImageTk.PhotoImage(Image.open(f"img/{check}").resize((40,40))) for check in self.check_names]
         with open("img.json", "r") as checktypes_json:
@@ -473,10 +471,8 @@ class BattleshipBoard():
             checktypes_dict = json.load(checktypes_json)
             self.labels = [checktypes_dict[check] for check in self.check_names]
         valid_types = [self.check_types[i] for i in range(len(self.check_types)) if entries[i + 1].instate(['selected'])]
-        valid_checks = [True if x in valid_types else False for x in self.labels]
-        self.check_names = [x for (x, include) in zip(self.check_names, valid_checks) if include]
-        print(len(self.check_names))
-        self.row_size, self.col_size = [int(np.floor(np.sqrt(len(self.check_names))))] * 2
+        self.valid_checks = [True if x in valid_types else False for x in self.labels]
+        self.row_size, self.col_size = [int(np.floor(np.sqrt(sum(self.valid_checks))))] * 2
         if gen_card:
             self.generate_card(self.row_size, self.col_size)
         window.destroy()
@@ -621,6 +617,27 @@ class BattleshipBoard():
         btn.grid(row = i+1, column = 1)
 
 
+    def save_settings(self):
+        with open("settings.txt", "w") as settings_file:
+            if hasattr(self, 'valid_checks'):
+                settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
+            if hasattr(self, 'restrictions'):
+                settings_file.write(f"self.restrictions = {self.restrictions}\n")
+            settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
+            settings_file.write(f"self.seedname = '{self.seedname}'\n")
+            settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+    
+
+    def load_settings(self):
+        settings_filename = fd.askopenfilename()
+        with open(settings_filename, "r") as settings_file:
+            settings = settings_file.readlines()
+            for line in settings:
+                exec(line)
+        self.set_seedname(self.seedname)
+        self.generate_card(self.row_size, self.col_size, self.seedname)
+
+
     def validate_self_ships(self):
         ship_layout = np.loadtxt('ships/ships.txt')
         ship_layout_with_ids = self.find_ships(ship_layout)
@@ -643,13 +660,14 @@ class BattleshipBoard():
             print_success = False
 
         # add feature for checking for neighbors
+        print(ship_layout_with_ids)
         for ship_id in range(1, int(np.max(ship_layout_with_ids)) + 1):
             xs, ys = np.where(ship_layout_with_ids == ship_id)
             current_ship_id_locations = [[xs[j], ys[j]] for j in range(len(xs))]
             for square in current_ship_id_locations:
                 # try left
                 try:
-                    if ship_layout_with_ids[square[0], square[1] - 1] > ship_id:
+                    if ship_layout_with_ids[square[0], max(square[1] - 1, 0)] > ship_id:
                         print("You have neighboring ships.")
                         print_success = False
                         break
@@ -665,7 +683,7 @@ class BattleshipBoard():
                     pass
                 #try up
                 try:
-                    if ship_layout_with_ids[square[0] - 1, square[1]] > ship_id:
+                    if ship_layout_with_ids[max(square[0] - 1, 0), square[1]] > ship_id:
                         print("You have neighboring ships.")
                         print_success = False
                         break
@@ -674,7 +692,7 @@ class BattleshipBoard():
                 #try down
                 try:
                     if ship_layout_with_ids[square[0] + 1, square[1]] > ship_id:
-                        print("You have neighboring ships.")
+                        print(ship_id, (square[0] + 1, square[1]))
                         print_success = False
                         break
                 except IndexError:
