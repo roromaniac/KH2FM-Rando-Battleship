@@ -529,9 +529,6 @@ class BattleshipBoard():
             entries[i].state(["selected"])
             entries[i].grid(row = i, column = 1)
 
-        btn0 = ttk.Button(window, text = "Update Card with These Settings", command = lambda: self.set_checks(entries, window, gen_card=True))
-        btn0.grid(row = i+1, column = 0)
-
         btn1 = ttk.Button(window, text = "Submit Toggles", command = lambda: self.set_checks(entries, window, gen_card=False))
         btn1.grid(row = i+1, column = 1)
 
