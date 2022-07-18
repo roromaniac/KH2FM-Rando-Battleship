@@ -43,7 +43,7 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 7. <ins>Toggle Checks for Inclusion</ins>: Toggle checks to be allowed in the pool of checks for battleship. :white_check_mark: Included in v1.1.0.
 8. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. :white_check_mark: Included in v1.1.0.
 9. <ins>Restrictions</ins>: Validate restrictions on ships (such as number of allowable bosses, level 4 movements, etc.). :white_check_mark: Included in v1.1.0.
-10. <ins>Load Settings Automatically</ins>: Allow for board with the same restrictions/toggles/randomization etc. to be immediately loaded (as opposed to each player recreating the same board). 
+10. <ins>Load Settings Automatically</ins>: Allow for board with the same restrictions/toggles/randomization etc. to be immediately loaded (as opposed to each player recreating the same board). :white_check_mark: Included in v1.1.1.
 11. <ins>Presets</ins>: Same as the geneator, the ability to save settings as a preset. ETA: 1-2 weeks (from 7/17/22).
 12. <ins>Image and Window Quality</ins>: Make errors popout windows and improve image/window size quality with changing grid size. ETA: 1-2 weeks (from 7/17/22). Partially included in v1.0.1.
 13. <ins>Markdown Assistance</ins>: The ability to right click to help you mark what might be important (or not important). ETA: 1-2 months (from 7/15/22)
