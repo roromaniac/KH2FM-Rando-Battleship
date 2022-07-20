@@ -650,7 +650,6 @@ class BattleshipBoard():
                 if hasattr(self, 'restrictions'):
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
-                settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
         else:
             with open("settings.txt", "w") as settings_file:
@@ -661,6 +660,7 @@ class BattleshipBoard():
                 if hasattr(self, 'restrictions'):
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
+                settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
     
 
