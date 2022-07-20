@@ -56,7 +56,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v1.1.1)")
+        self.root.title("Rando Battleship (v1.1.2)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -100,6 +100,7 @@ class BattleshipBoard():
         actions.add_command(label = 'Download Ship Layout', command=self.download, accelerator="Ctrl+D")
         actions.add_command(label = 'Download Board Settings', command=self.save_settings)
         actions.add_command(label = 'Upload Board Settings', command=self.load_settings)
+        actions.add_command(label = 'Save Settings as New Preset', command=lambda: self.save_settings(True))
         menubar.add_cascade(label = 'Actions', menu=actions)
 
         # Customize Mode Menu
@@ -475,8 +476,9 @@ class BattleshipBoard():
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
             self.labels = [checktypes_dict[check] for check in self.check_names]
-        valid_types = [self.check_types[i] for i in range(len(self.check_types)) if entries[i + 1].instate(['selected'])]
-        self.valid_checks = [True if x in valid_types else False for x in self.labels]
+        self.selected_checks = [entries[i + 1].instate(['selected']) for i in range(len(self.check_types))]
+        self.valid_types = [self.check_types[i] for i in range(len(self.check_types)) if entries[i + 1].instate(['selected'])]
+        self.valid_checks = [True if x in self.valid_types else False for x in self.labels]
         self.row_size, self.col_size = [int(np.floor(np.sqrt(sum(self.valid_checks))))] * 2
         if gen_card:
             self.generate_card(self.row_size, self.col_size)
@@ -526,15 +528,23 @@ class BattleshipBoard():
             # have toggle checked by default
             entries[i] = ttk.Checkbutton(window, cursor=None)
             entries[i].state(["!alternate"])
-            entries[i].state(["selected"])
+            if hasattr(self, 'selected_checks'):
+                entries[i].state(["!selected"])
+                if self.selected_checks[i - 1]:
+                  entries[i].state(["selected"])  
+            else:
+                entries[i].state(["selected"])
             entries[i].grid(row = i, column = 1)
 
         btn1 = ttk.Button(window, text = "Submit Toggles", command = lambda: self.set_checks(entries, window, gen_card=False))
         btn1.grid(row = i+1, column = 1)
 
 
-    def set_restrictions(self, entries, window):
-        restriction_values = [int(entries[i].get()) for i in range(1, len(entries.keys()) + 1)]
+    def set_restrictions(self, entries, window, reset=False):
+        if reset:
+            restriction_values = [13, 6, 6, 6, 5, 5, 5, 5, 31, 2, 5, 5, 4, 3, 11, 5]
+        else:
+            restriction_values = [int(entries[i].get()) for i in range(1, len(entries.keys()) + 1)]
         quantitative_check_labels = [
             'report', 
             'magic1',
@@ -568,6 +578,7 @@ class BattleshipBoard():
 
         labels = {}
         entries = {}
+        maxes = {}
 
         quantitative_check_type_labels = ["Reports", 
                                           "Lvl 1 Magic", 
@@ -612,22 +623,43 @@ class BattleshipBoard():
             labels[i].grid(row = i, column = 0)
 
             entries[i] = ttk.Entry(window, width = 5)
-            entries[i].insert(0, checktype_index_to_quantity_dict[i - 1])
+            if hasattr(self, 'restrictions'):
+                entries[i].insert(0, list(self.restrictions.values())[i - 1])
+            else:
+                entries[i].insert(0, checktype_index_to_quantity_dict[i - 1])
             entries[i].grid(row = i, column = 1)
 
-        btn = ttk.Button(window, text = "Submit Answers", command = lambda: self.set_restrictions(entries, window))
-        btn.grid(row = i+1, column = 1)
+            maxes[i] = ttk.Label(window, text=f"(max {checktype_index_to_quantity_dict[i - 1]})")
+            maxes[i].grid(row = i, column = 2)
+
+        btn0 = ttk.Button(window, text = "Reset Restrictions", command = lambda: self.set_restrictions(entries, window, reset=True))
+        btn0.grid(row = i+1, column = 0)
+
+        btn1 = ttk.Button(window, text = "Submit Answers", command = lambda: self.set_restrictions(entries, window))
+        btn1.grid(row = i+1, column = 1)
 
 
-    def save_settings(self):
-        with open("settings.txt", "w") as settings_file:
-            if hasattr(self, 'valid_checks'):
-                settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
-            if hasattr(self, 'restrictions'):
-                settings_file.write(f"self.restrictions = {self.restrictions}\n")
-            settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
-            settings_file.write(f"self.seedname = '{self.seedname}'\n")
-            settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+    def save_settings(self, preset=False):
+        if preset:
+            preset_name = fd.asksaveasfilename(initialdir="/presets", defaultextension='.txt', filetypes=[("Text File", ".txt")])
+            print(preset_name)
+            with open(preset_name, "w") as settings_file:
+                if hasattr(self, 'valid_checks'):
+                    settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
+                if hasattr(self, 'restrictions'):
+                    settings_file.write(f"self.restrictions = {self.restrictions}\n")
+                settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
+                settings_file.write(f"self.seedname = '{self.seedname}'\n")
+                settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+        else:
+            with open("settings.txt", "w") as settings_file:
+                if hasattr(self, 'valid_checks'):
+                    settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
+                if hasattr(self, 'restrictions'):
+                    settings_file.write(f"self.restrictions = {self.restrictions}\n")
+                settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
+                settings_file.write(f"self.seedname = '{self.seedname}'\n")
+                settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
     
 
     def load_settings(self):

@@ -1,4 +1,4 @@
 self.valid_checks = [True, True, True, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
 self.row_size, self.col_size = 9, 9
-self.seedname = 'kdXkezVexwaApJxXgBQFTNfNgz'
+self.seedname = 'iwBqgyDVwrmLRLrfSXarrtrZvI'
 self.ship_sizes = [5, 4, 3, 3, 2]
