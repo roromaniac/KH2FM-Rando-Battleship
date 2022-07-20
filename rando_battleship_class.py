@@ -642,8 +642,9 @@ class BattleshipBoard():
     def save_settings(self, preset=False):
         if preset:
             preset_name = fd.asksaveasfilename(initialdir="/presets", defaultextension='.txt', filetypes=[("Text File", ".txt")])
-            print(preset_name)
             with open(preset_name, "w") as settings_file:
+                if hasattr(self, 'selected_checks'):
+                    settings_file.write(f"self.selected_checks = {self.selected_checks}\n")
                 if hasattr(self, 'valid_checks'):
                     settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
                 if hasattr(self, 'restrictions'):
@@ -653,12 +654,13 @@ class BattleshipBoard():
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
         else:
             with open("settings.txt", "w") as settings_file:
+                if hasattr(self, 'selected_checks'):
+                    settings_file.write(f"self.selected_checks = {self.selected_checks}\n")
                 if hasattr(self, 'valid_checks'):
                     settings_file.write(f"self.valid_checks = {self.valid_checks}\n")
                 if hasattr(self, 'restrictions'):
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
-                settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
     
 
