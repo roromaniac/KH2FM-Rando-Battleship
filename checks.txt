@@ -1,0 +1,17 @@
+Checks Collected
+Report3
+OlympusStone
+UnknownDisk
+QuickRun1
+DodgeRoll1
+AerialDodge1
+AerialDodge2
+Glide1
+AuronWep
+MulanWep
+BeastWep
+JackWep
+SimbaWep
+SparrowWep
+AladdinWep
+TronWep

@@ -328,6 +328,7 @@ class BattleshipBoard():
                     self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
             except ValueError:
                 print(f"The check {new_check} is not in the pool.")
+                self.important_checks_recorded.append(new_check)
         try:
             self.set_style(f"bclicked{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="#32CD32", highlightthickness=10, padding=0)
             self.button_dict[button_key].configure(style=f"bclicked{button_key[0]}{button_key[1]}.TButton")
