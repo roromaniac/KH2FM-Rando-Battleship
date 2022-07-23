@@ -9,9 +9,11 @@ import string
 import subprocess
 import shutil
 import webbrowser
-import ast
+import subprocess
 import json
 import itertools as it
+import threading
+import time
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -54,9 +56,14 @@ class BattleshipBoard():
             os.mkdir('ships')
         np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
 
+        # reset the autotracker
+        self.important_checks_recorded = []
+        if os.path.exists('checks.txt'):
+            os.remove('checks.txt')
+
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v1.1.2)")
+        self.root.title("Rando Battleship (v1.2.0)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -72,7 +79,6 @@ class BattleshipBoard():
         self.root.bind_all("<Control-u>", lambda event: self.upload(False))
         self.root.bind_all("<Control-d>", self.download)
         self.root.bind_all("<Control-h>", self.open_help_window)
-
 
         self.generate_card(self.row_size, self.col_size)
 
@@ -101,6 +107,7 @@ class BattleshipBoard():
         actions.add_command(label = 'Download Board Settings', command=self.save_settings)
         actions.add_command(label = 'Upload Board Settings', command=self.load_settings)
         actions.add_command(label = 'Save Settings as New Preset', command=lambda: self.save_settings(True))
+        actions.add_command(label = 'Start Autotracking', command=self.autotracking_timer)
         menubar.add_cascade(label = 'Actions', menu=actions)
 
         # Customize Mode Menu
@@ -124,6 +131,7 @@ class BattleshipBoard():
 
         self.root.config(menu=menubar)
         self.root.mainloop()
+
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -302,6 +310,40 @@ class BattleshipBoard():
                                                                                self.change_button_color("black", hit_or_miss_color, row_index, col_index, current_border_color, False))
 
 
+    def autotracking(self):
+        # read txt
+        important_checks_found = open("checks.txt").read().splitlines()
+        # check if any new checks were collected
+        new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
+        # invoke the appropriate button
+        key_list = list(self.autotracking_labels.keys())
+        val_list = list(self.autotracking_labels.values())
+        for new_check in new_checks:
+            try:
+                button_key = key_list[val_list.index(new_check)]
+                self.button_dict[button_key].invoke()
+                self.important_checks_recorded.append(new_check)
+                if hasattr(self, "last_found_check") and len(new_checks) != 0:
+                    self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor="#333333", highlightthickness=10, padding=0)
+                    self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
+            except ValueError:
+                print(f"The check {new_check} is not in the pool.")
+        try:
+            self.set_style(f"bclicked{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="#32CD32", highlightthickness=10, padding=0)
+            self.button_dict[button_key].configure(style=f"bclicked{button_key[0]}{button_key[1]}.TButton")
+            self.last_found_check = button_key
+        except UnboundLocalError:
+            pass
+        threading.Timer(0.25, self.autotracking).start()
+
+
+
+    def autotracking_timer(self):
+        subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+        time.sleep(20)
+        threading.Timer(0.25, self.autotracking).start()
+
+
     def generate_card(self, row_size, col_size, seedname=None, event=None):
         self.root.geometry(f"{64*row_size}x{64*col_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
@@ -325,6 +367,7 @@ class BattleshipBoard():
         self.frame.grid(row=0, column=0, sticky=N+S+E+W)
 
         self.button_dict = {}
+        self.autotracking_labels = {}
 
         #Create a (rows x columns) grid of buttons inside the frame
         for row_index in range(row_size):
@@ -334,6 +377,7 @@ class BattleshipBoard():
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
+                self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.row_size + col_index][:-5]
 
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
         checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
