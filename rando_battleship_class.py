@@ -327,11 +327,12 @@ class BattleshipBoard():
                     self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor="#333333", highlightthickness=10, padding=0)
                     self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
             except ValueError:
-                print(f"The check {new_check} is not in the pool.")
-                self.important_checks_recorded.append(new_check)
+                if new_check != "Checks Collected":
+                    print(f"The check {new_check} is not in the pool.")
+                    self.important_checks_recorded.append(new_check)
         try:
-            self.set_style(f"bclicked{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="#32CD32", highlightthickness=10, padding=0)
-            self.button_dict[button_key].configure(style=f"bclicked{button_key[0]}{button_key[1]}.TButton")
+            self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="#32CD32", highlightthickness=10, padding=0)
+            self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
             self.last_found_check = button_key
         except UnboundLocalError:
             pass
@@ -405,8 +406,8 @@ class BattleshipBoard():
                 xs, ys = np.where(self.opponent_ships_with_ids == id)
                 if all([value == 1 for value in [ self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
                     for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                        self.set_style(f"bsunk{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
-                        self.button_dict[(index_x, index_y)].configure(style=f"bsunk{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
+                        self.set_style(f"bclicked{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                        self.button_dict[(index_x, index_y)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                             self.change_button_color("pink", "pink", row_index, col_index, current_border_color, placing_ship))
                     self.ships_left.remove(id)
 

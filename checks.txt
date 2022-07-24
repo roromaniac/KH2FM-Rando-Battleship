@@ -1,17 +1,15 @@
 Checks Collected
-Report3
+Valor
+Final
+Report11
+JackWep
 OlympusStone
 UnknownDisk
+TornPage1
+HighJump1
 QuickRun1
+QuickRun2
 DodgeRoll1
 AerialDodge1
 AerialDodge2
 Glide1
-AuronWep
-MulanWep
-BeastWep
-JackWep
-SimbaWep
-SparrowWep
-AladdinWep
-TronWep
