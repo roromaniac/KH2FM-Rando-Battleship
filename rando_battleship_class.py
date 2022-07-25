@@ -743,7 +743,6 @@ class BattleshipBoard():
             print_success = False
 
         # add feature for checking for neighbors
-        print(ship_layout_with_ids)
         for ship_id in range(1, int(np.max(ship_layout_with_ids)) + 1):
             xs, ys = np.where(ship_layout_with_ids == ship_id)
             current_ship_id_locations = [[xs[j], ys[j]] for j in range(len(xs))]
