@@ -1,5 +1,3 @@
-self.selected_checks = [True, True, True, True, True, True, False, False, True, True, True, True, True, True, True, True, True, False, True, True, True]
-self.valid_checks = [True, True, False, False, True, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False, True, True, True, True, True, True, True, True, True, False, False, True, True, True, True, True, True, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
-self.row_size, self.col_size = 10, 10
-self.seedname = 'bEsjWvljohTtfhiEarclRuBmsw'
-self.ship_sizes = [2, 2, 3, 3, 3, 4, 4, 5]
+self.row_size, self.col_size = 11, 11
+self.seedname = 'oqkMZTJjffHfOKaibUqdiigggf'
+self.ship_sizes = [5, 4, 3, 3, 2]

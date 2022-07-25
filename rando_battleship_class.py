@@ -300,8 +300,9 @@ class BattleshipBoard():
             for y in range(self.col_size):
                 hit_or_miss_color = "red" if opponent_ships[x,y] == 1 else "#0077be"
                 if not same_board:
-                    border_color = "yellow" if your_ships[x][y] == 1 else "#333333"
-                    border_width = 50 if your_ships[x][y] == 1 else 10
+                    # #099125
+                    border_color = "#22bb41" if your_ships[x][y] == 1 else "#333333"
+                    border_width = 20 if your_ships[x][y] == 1 else 10
                 else:
                     border_color = "#333333"
                     border_width = 10
@@ -324,14 +325,14 @@ class BattleshipBoard():
                 self.button_dict[button_key].invoke()
                 self.important_checks_recorded.append(new_check)
                 if hasattr(self, "last_found_check") and len(new_checks) != 0:
-                    self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor="#333333", highlightthickness=10, padding=0)
+                    self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
                     self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
             except ValueError:
                 if new_check != "Checks Collected":
                     print(f"The check {new_check} is not in the pool.")
                     self.important_checks_recorded.append(new_check)
         try:
-            self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="#32CD32", highlightthickness=10, padding=0)
+            self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
             self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
             self.last_found_check = button_key
         except UnboundLocalError:
