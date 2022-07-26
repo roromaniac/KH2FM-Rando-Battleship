@@ -131,7 +131,9 @@ class BattleshipBoard():
 
         self.root.config(menu=menubar)
         self.root.mainloop()
-        self.current_timer.cancel()
+        if hasattr(self, 'current_timer'):
+            self.autotracking_process.kill()
+            self.current_timer.cancel()
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
