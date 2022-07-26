@@ -1,25 +1,7 @@
 Checks Collected
-Master
-Lamp
-AuronWep
-MulanWep
-BeastWep
-JackWep
-SimbaWep
-SparrowWep
-AladdinWep
-TronWep
-MembershipCard
-IceCream
-Picture
+Report3
 OlympusStone
 UnknownDisk
-Fire1
-Fire2
-Thunder1
-Cure1
-Reflect1
-HighJump1
 QuickRun1
 DodgeRoll1
 AerialDodge1

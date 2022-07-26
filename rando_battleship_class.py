@@ -131,7 +131,7 @@ class BattleshipBoard():
 
         self.root.config(menu=menubar)
         self.root.mainloop()
-
+        self.current_timer.cancel()
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -313,38 +313,40 @@ class BattleshipBoard():
 
     def autotracking(self):
         # read txt
-        important_checks_found = open("checks.txt").read().splitlines()
-        # check if any new checks were collected
-        new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
-        # invoke the appropriate button
-        key_list = list(self.autotracking_labels.keys())
-        val_list = list(self.autotracking_labels.values())
-        for new_check in new_checks:
-            try:
-                button_key = key_list[val_list.index(new_check)]
-                self.button_dict[button_key].invoke()
-                self.important_checks_recorded.append(new_check)
-                if hasattr(self, "last_found_check") and len(new_checks) != 0:
-                    self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
-                    self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
-            except ValueError:
-                if new_check != "Checks Collected":
-                    print(f"The check {new_check} is not in the pool.")
+        if os.path.exists('checks.txt'):
+            important_checks_found = open("checks.txt").read().splitlines()
+            # check if any new checks were collected
+            new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
+            # invoke the appropriate button
+            key_list = list(self.autotracking_labels.keys())
+            val_list = list(self.autotracking_labels.values())
+            for new_check in new_checks:
+                try:
+                    button_key = key_list[val_list.index(new_check)]
+                    self.button_dict[button_key].invoke()
                     self.important_checks_recorded.append(new_check)
-        try:
-            self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
-            self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
-            self.last_found_check = button_key
-        except UnboundLocalError:
-            pass
-        threading.Timer(0.25, self.autotracking).start()
+                    if hasattr(self, "last_found_check") and len(new_checks) != 0:
+                        self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
+                        self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
+                except ValueError:
+                    if new_check != "Checks Collected":
+                        print(f"The check {new_check} is not in the pool.")
+                        self.important_checks_recorded.append(new_check)
+            try:
+                self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
+                self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
+                self.last_found_check = button_key
+            except UnboundLocalError:
+                pass
+        self.current_timer = threading.Timer(0.25, self.autotracking)
+        self.current_timer.start()
 
 
 
     def autotracking_timer(self):
-        subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
-        time.sleep(20)
-        threading.Timer(0.25, self.autotracking).start()
+        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+        self.current_timer = threading.Timer(0.25, self.autotracking)
+        self.current_timer.start()
 
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
