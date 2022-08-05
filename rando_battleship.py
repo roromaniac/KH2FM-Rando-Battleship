@@ -132,11 +132,15 @@ class BattleshipBoard():
         self.info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
         menubar.add_cascade(label = 'Info', menu=self.info)
 
+        # Create Marking Color
+        self.marking_color = "green"
+
         self.root.config(menu=menubar)
         self.root.mainloop()
         if hasattr(self, 'current_timer'):
             self.autotracking_process.kill()
             self.current_timer.cancel()
+            # kill encryption process??????
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -151,7 +155,6 @@ class BattleshipBoard():
 
     def place_ship(self, x, y, event=None):
         self.place_grid[x,y] = 1 - self.place_grid[x,y]
-        print(self.place_grid)
         return self.place_grid
 
     
@@ -395,6 +398,8 @@ class BattleshipBoard():
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
+                self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
+                                                                        self.change_button_color("black", self.marking_color, row_index, col_index, "#333333", False))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.row_size + col_index][:-5]
 
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
@@ -415,8 +420,8 @@ class BattleshipBoard():
         self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                         self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
-        # check if boat is sunk and change the button colors to reflect that
-        if not placing_ship:
+        # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
+        if not placing_ship and hasattr(self, 'checks_found'):
             self.checks_found[row_index, col_index] = 1
             for id in self.ships_left:
                 xs, ys = np.where(self.opponent_ships_with_ids == id)
@@ -604,7 +609,7 @@ class BattleshipBoard():
 
     def set_restrictions(self, entries, window, reset=False):
         if reset:
-            restriction_values = [13, 6, 6, 6, 5, 5, 5, 5, 31, 2, 5, 5, 4, 3, 11, 5]
+            restriction_values = [13, 6, 6, 6, 5, 5, 5, 5, 33, 2, 5, 5, 4, 3, 11, 5]
         else:
             restriction_values = [int(entries[i].get()) for i in range(1, len(entries.keys()) + 1)]
         quantitative_check_labels = [
@@ -738,18 +743,28 @@ class BattleshipBoard():
     
     def load_bunter_seed(self):
         # need to find a way where players can keep enemyspoilers.txt in casual modes
-        filename = fd.askopenfilename()
 
-        os.mkdir('enemyspoilers')
-        shutil.unpack_archive(filename, './enemyspoilers', 'zip')
-        if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
-            self.replacements = make_replacements_dict()
-            shutil.rmtree('enemyspoilers')
-        else:
-            shutil.rmtree('enemyspoilers')
-            # MAKE A POPUP WINDOW EXPLAINING WHY USER HAS TO TRY AGAIN
-            self.replacements = ast.literal_eval(subprocess.check_output('autotracker/encrypt_replacements.exe').decode('utf-8'))
-        print(self.replacements)
+        # remove enemyspoilers before next load AT ALL COSTS
+        try:
+            filename = fd.askopenfilename()
+
+            os.mkdir('enemyspoilers')
+            shutil.unpack_archive(filename, './enemyspoilers', 'zip')
+            if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
+                self.replacements = make_replacements_dict()
+                shutil.rmtree('enemyspoilers')
+            else:
+                self.replacements = ast.literal_eval(subprocess.check_output(['autotracker/encrypt_replacements.exe', f'{filename}']).decode('utf-8'))
+            popup = Tk()
+            popup.wm_title("Success!")
+            label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
+
+        except:
+            if os.path.exists('enemyspoilers'):
+                shutil.rmtree('enemyspoilers')
 
 
     def validate_self_ships(self):
@@ -835,20 +850,23 @@ class BattleshipBoard():
 
 def make_replacements_dict():
 
-    spoiler_file = open('enemyspoilers/enemyspoilers.txt')
-    replacements = spoiler_file.readlines()[:56]
+    if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
 
-    # filter relevant replacements and remove unnecessary whitespace
-    replacements = [replacement.strip() for replacement in replacements if ("Data" not in replacement and "Cups" not in replacement and "(1)" not in replacement)][1:]
+        spoiler_file = open('enemyspoilers/enemyspoilers.txt')
+        replacements = spoiler_file.readlines()[:56]
 
-    # make the json dict of replacements
-    replacements_dict = {}
-    for replacement in replacements:
-        entry = replacement.split('became')
-        entry[0] = entry[0].strip().replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "")
-        entry[1] = entry[1].strip().replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "")
-        replacements_dict[entry[0]] = entry[1]
-    spoiler_file.close()
+        # filter relevant replacements and remove unnecessary whitespace
+        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)][1:]
+
+        # make the json dict of replacements
+        replacements_dict = {}
+        for replacement in replacements:
+            entry = replacement.split('became')
+            entry[0] = entry[0].strip().replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+            entry[1] = entry[1].strip().replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
+            replacements_dict[entry[0]] = entry[1]
+        spoiler_file.close()
+
     return replacements_dict
 
 BattleshipBoard() 
