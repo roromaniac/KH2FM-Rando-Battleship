@@ -339,6 +339,9 @@ class BattleshipBoard():
                         # if the check isn't a randomizable boss, quit
                         except KeyError:
                             pass
+                    else:
+                        if (new_check == "ArmoredXemnas1"):
+                            new_check = "ArmoredXemnas"
                     button_key = key_list[val_list.index(new_check)]
                     self.button_dict[button_key].invoke()
                     if hasattr(self, "last_found_check") and len(new_checks) != 0:
