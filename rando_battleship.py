@@ -374,7 +374,6 @@ class BattleshipBoard():
         if hasattr(self, 'current_timer'):
             self.stop_threads = True
             self.current_timer.join()
-            print("AUTOTRACKER SHOULD TERMINATE")
             self.autotracking_process.kill()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
         self.stop_threads = False
