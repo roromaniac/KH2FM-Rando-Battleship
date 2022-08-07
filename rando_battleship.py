@@ -14,6 +14,8 @@ import itertools as it
 import threading
 from cryptography.fernet import Fernet
 import ast
+import time
+import ctypes
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -139,8 +141,7 @@ class BattleshipBoard():
         self.root.mainloop()
         if hasattr(self, 'current_timer'):
             self.autotracking_process.kill()
-            self.current_timer.cancel()
-            # kill encryption process??????
+            # self.current_timer.stop()
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -320,51 +321,65 @@ class BattleshipBoard():
 
 
     def autotracking(self):
-        # read txt
-        if os.path.exists('checks.txt'):
-            important_checks_found = open("checks.txt").read().splitlines()
-            # check if any new checks were collected
-            new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
-            # invoke the appropriate button
-            key_list = list(self.autotracking_labels.keys())
-            val_list = list(self.autotracking_labels.values())
-            for new_check in new_checks:
-                try:
-                    self.important_checks_recorded.append(new_check)
-                    # if boss enemy has been invoked...
-                    if hasattr(self, 'replacements'):
-                        # try to get the randomized boss instead of the vanilla boss
-                        try:
-                            new_check = self.replacements[new_check]
-                        # if the check isn't a randomizable boss, quit
-                        except KeyError:
-                            pass
-                    else:
-                        if (new_check == "ArmoredXemnas1"):
-                            new_check = "ArmoredXemnas"
-                    button_key = key_list[val_list.index(new_check)]
-                    self.button_dict[button_key].invoke()
-                    if hasattr(self, "last_found_check") and len(new_checks) != 0:
-                        self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
-                        self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
-                except ValueError:
-                    if new_check != "Checks Collected":
-                        print(f"The check {new_check} is not in the pool.")
+
+        # continue to autotrack until stopped
+        while True:
+
+            # read txt
+            if os.path.exists('checks.txt'):
+                with open("checks.txt") as checks_from_DAs_tracker:
+                    important_checks_found = checks_from_DAs_tracker.read().splitlines()
+                # check if any new checks were collected
+                new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
+                # invoke the appropriate button
+                key_list = list(self.autotracking_labels.keys())
+                val_list = list(self.autotracking_labels.values())
+                for new_check in new_checks:
+                    try:
                         self.important_checks_recorded.append(new_check)
-            try:
-                self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
-                self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
-                self.last_found_check = button_key
-            except UnboundLocalError:
-                pass
-        self.current_timer = threading.Timer(0.25, self.autotracking)
-        self.current_timer.start()
+                        # if boss enemy has been invoked...
+                        if hasattr(self, 'replacements'):
+                            # try to get the randomized boss instead of the vanilla boss
+                            try:
+                                new_check = self.replacements[new_check]
+                            # if the check isn't a randomizable boss, quit
+                            except KeyError:
+                                pass
+                        else:
+                            if (new_check == "ArmoredXemnas1"):
+                                new_check = "ArmoredXemnas"
+                        if not ("ArmoredXemnas1" in self.important_checks_recorded) or not ("ArmoredXemans2" in self.important_checks_recorded):
+                            button_key = key_list[val_list.index(new_check)]
+                            self.button_dict[button_key].invoke()
+                        if hasattr(self, "last_found_check") and len(new_checks) != 0:
+                            self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
+                            self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
+                    except ValueError:
+                        if new_check != "Checks Collected":
+                            print(f"The check {new_check} is not in the pool.")
+                            self.important_checks_recorded.append(new_check)
+                try:
+                    self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
+                    self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
+                    self.last_found_check = button_key
+                except UnboundLocalError:
+                    pass
+            
+            time.sleep(5)
+            if self.stop_threads:
+                break
 
 
     def autotracking_timer(self):
-        print(self.replacements)
+        if hasattr(self, 'current_timer'):
+            self.stop_threads = True
+            self.current_timer.join()
+            print("AUTOTRACKER SHOULD TERMINATE")
+            self.autotracking_process.kill()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
-        self.current_timer = threading.Timer(0.25, self.autotracking)
+        self.stop_threads = False
+        self.current_timer = threading.Thread(target=self.autotracking)
+        self.current_timer.daemon=True
         self.current_timer.start()
 
 
@@ -871,5 +886,6 @@ def make_replacements_dict():
         spoiler_file.close()
 
     return replacements_dict
+
 
 BattleshipBoard() 
