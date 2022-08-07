@@ -373,7 +373,7 @@ class BattleshipBoard():
                 except UnboundLocalError:
                     pass
             
-            time.sleep(0.25)
+            time.sleep(2.5)
             if self.stop_threads:
                 break
 
