@@ -350,15 +350,15 @@ class BattleshipBoard():
                             # if the check isn't a randomizable boss, quit
                             except KeyError:
                                 pass
-                        else:
-                            # don't want to invoke armored xemnas twice to go back to unmarked
-                            if (new_check == "ArmoredXemnas1") or (new_check == "ArmoredXemnas2"):
-                                if ("ArmoredXemnas1" in self.important_checks_recorded) and ("ArmoredXemnas2" in self.important_checks_recorded):
-                                    continue
-                                new_check = "ArmoredXemnas"
-                            # invoke button
-                            button_key = key_list[val_list.index(new_check)]
-                            self.button_dict[button_key].invoke()
+
+                        # don't want to invoke armored xemnas twice to go back to unmarked
+                        if (new_check == "ArmoredXemnas1") or (new_check == "ArmoredXemnas2"):
+                            if ("ArmoredXemnas1" in self.important_checks_recorded) and ("ArmoredXemnas2" in self.important_checks_recorded):
+                                continue
+                            new_check = "ArmoredXemnas"
+                        # invoke button
+                        button_key = key_list[val_list.index(new_check)]
+                        self.button_dict[button_key].invoke()
                         if hasattr(self, "last_found_check") and len(new_checks) != 0:
                             self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
                             self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
@@ -386,7 +386,7 @@ class BattleshipBoard():
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
         self.stop_threads = False
         self.current_timer = threading.Thread(target=self.autotracking)
-        self.current_timer.daemon=True
+        # self.current_timer.daemon=True
         self.current_timer.start()
 
 
