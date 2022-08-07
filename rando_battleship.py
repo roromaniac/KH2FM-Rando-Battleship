@@ -339,6 +339,11 @@ class BattleshipBoard():
                         self.important_checks_recorded.append(new_check)
                         # if boss enemy has been invoked...
                         if hasattr(self, 'replacements'):
+
+                            # in boss enemy we don't want to track Future Pete
+                            if new_check == "Pete":
+                                continue
+
                             # try to get the randomized boss instead of the vanilla boss
                             try:
                                 new_check = self.replacements[new_check]
@@ -346,9 +351,12 @@ class BattleshipBoard():
                             except KeyError:
                                 pass
                         else:
-                            if (new_check == "ArmoredXemnas1"):
+                            # don't want to invoke armored xemnas twice to go back to unmarked
+                            if (new_check == "ArmoredXemnas1") or (new_check == "ArmoredXemnas2"):
+                                if ("ArmoredXemnas1" in self.important_checks_recorded) and ("ArmoredXemnas2" in self.important_checks_recorded):
+                                    continue
                                 new_check = "ArmoredXemnas"
-                        if not ("ArmoredXemnas1" in self.important_checks_recorded) or not ("ArmoredXemans2" in self.important_checks_recorded):
+                            # invoke button
                             button_key = key_list[val_list.index(new_check)]
                             self.button_dict[button_key].invoke()
                         if hasattr(self, "last_found_check") and len(new_checks) != 0:
@@ -365,7 +373,7 @@ class BattleshipBoard():
                 except UnboundLocalError:
                     pass
             
-            time.sleep(5)
+            time.sleep(0.25)
             if self.stop_threads:
                 break
 
@@ -879,8 +887,8 @@ def make_replacements_dict():
         replacements_dict = {}
         for replacement in replacements:
             entry = replacement.split('became')
-            entry[0] = entry[0].strip().replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
-            entry[1] = entry[1].strip().replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
+            entry[0] = entry[0].strip().replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+            entry[1] = entry[1].strip().replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
 
