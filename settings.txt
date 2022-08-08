@@ -1,3 +1,0 @@
-self.row_size, self.col_size = 11, 11
-self.seedname = 'oqkMZTJjffHfOKaibUqdiigggf'
-self.ship_sizes = [5, 4, 3, 3, 2]

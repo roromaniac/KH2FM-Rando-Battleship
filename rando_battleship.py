@@ -59,6 +59,7 @@ class BattleshipBoard():
         np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
 
         # reset the autotracker
+        self.armored_xemnas_found = False
         self.important_checks_recorded = []
         if os.path.exists('checks.txt'):
             os.remove('checks.txt')
@@ -350,12 +351,15 @@ class BattleshipBoard():
                             # if the check isn't a randomizable boss, quit
                             except KeyError:
                                 pass
-
                         # don't want to invoke armored xemnas twice to go back to unmarked
-                        if (new_check == "ArmoredXemnas1") or (new_check == "ArmoredXemnas2"):
-                            if ("ArmoredXemnas1" in self.important_checks_recorded) and ("ArmoredXemnas2" in self.important_checks_recorded):
+                        if (new_check == "ArmoredXemnas"):
+                            if self.armored_xemnas_found:
                                 continue
-                            new_check = "ArmoredXemnas"
+                            else:
+                                self.armored_xemnas_found = True
+                        # track only first armored xem in vanilla battleships
+                        if (new_check == "ArmoredXemnas1"):
+                            new_check == "ArmoredXemnas"
                         # invoke button
                         button_key = key_list[val_list.index(new_check)]
                         self.button_dict[button_key].invoke()
