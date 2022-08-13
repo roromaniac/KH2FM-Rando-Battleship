@@ -27,6 +27,7 @@ class BattleshipBoard():
         # attribute setting
         self.row_size, self.col_size = row_size, col_size
         self.ship_sizes = [5, 4, 3, 3, 2]
+        self.latency = 1.5
 
         # checks allowed on grid
         self.check_types = [ 
@@ -121,6 +122,7 @@ class BattleshipBoard():
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
+        customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
         menubar.add_cascade(label = 'Customize', menu=customize)
 
 
@@ -153,6 +155,14 @@ class BattleshipBoard():
 
     def set_seedname(self, new_seedname):
         self.seedname = new_seedname
+
+    
+    def set_latency(self):
+        try:
+            self.latency = float(simpledialog.askstring(title="Latency Timer", prompt="Set Latency to: ", initialvalue=1.5))
+        except TypeError:
+            print("Make sure latency is an actual number.")
+
 
 
     def place_ship(self, x, y, event=None):
@@ -334,6 +344,9 @@ class BattleshipBoard():
             val_list = list(self.autotracking_labels.values())
             for new_check in new_checks:
                 try:
+                    # don't want to invoke org members twice if you do their data
+                    if (new_check in self.important_checks_recorded):
+                        continue
                     self.important_checks_recorded.append(new_check)
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
@@ -341,7 +354,6 @@ class BattleshipBoard():
                         # in boss enemy we don't want to track Future Pete
                         if new_check == "Pete":
                             continue
-
                         # try to get the randomized boss instead of the vanilla boss
                         try:
                             new_check = self.replacements[new_check]
