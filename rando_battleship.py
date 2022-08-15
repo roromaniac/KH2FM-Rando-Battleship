@@ -14,8 +14,6 @@ import itertools as it
 import threading
 from cryptography.fernet import Fernet
 import ast
-import time
-import ctypes
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -385,7 +383,8 @@ class BattleshipBoard():
                 self.last_found_check = button_key
             except UnboundLocalError:
                 pass
-        self.current_timer = threading.Timer(1.5, self.autotracking)
+        self.current_timer.cancel()
+        self.current_timer = threading.Timer(self.latency, self.autotracking)
         self.current_timer.start()
 
 
@@ -394,7 +393,7 @@ class BattleshipBoard():
             self.current_timer.cancel()
             self.autotracking_process.kill()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
-        self.current_timer = threading.Timer(1.5, self.autotracking)
+        self.current_timer = threading.Timer(self.latency, self.autotracking)
         self.current_timer.start()
 
 
