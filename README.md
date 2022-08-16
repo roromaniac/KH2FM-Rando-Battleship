@@ -9,23 +9,23 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 3. Once you have placed your ships, go to "Actions" -> "Download Ship Layout". This will create a file called "ships.zip."
 4. Send the ships.zip file to your partner. This is how your partner will know whether they hit or miss your ships mid-run.
 5. Make any customizations you want to make in the bottom few options of the Actions menu.
-6. If you are the card generator, go to "Actions" -> "Download Board Settings". Then, go to "Actions" -> "Upload Board Settings" do get your customized board.  Send the settings file over to all other opponents.
-   If you are the seed receiver, go to "Actions" -> "Upload Board Settings" and paste the seed you received from your opponent.
+6. If you are the card generator, go to "Actions" -> "Download Board Settings". Then, go to "Actions" -> "Upload Board Settings" do get your customized board.  Send the settings.txt file in your battleship_rando folder over to all other opponents.
+   If you are the seed receiver, go to "Actions" -> "Upload Board Settings" and select the txt you received from your opponent.
 7. To get your opponent's ship data tracked, go to "Actions" -> "Upload Ship Layout" and select the "ships.zip" file you just received.
 8. If you want autotracking, go to "Actions" -> "Start Autotracking". Note that it is recommended you wait until the game is loaded in before doing this.
 9. If you did all of the above steps successfully, your ships that were marked blue have disappeared and the board is all black. You're ready to play!
     The button will turn blue if the check is a miss and red if the check is a hit.
 
 # Visible Mode (Pick ships AFTER seeing board.)
-1. If you are the card generator, go to "Actions" -> "Download Board Settings". Then, go to "Actions" -> "Upload Board Settings" do get your customized board.  Send the settings file over to all other opponents.
-   If you are the seed receiver, go to "Actions" -> "Upload Board Settings" and paste the seed you received from your opponent.
+1. If you are the card generator, go to "Actions" -> "Download Board Settings". Then, go to "Actions" -> "Upload Board Settings" to get your customized board.  Send the settings.txt file in your battleship_rando folder over to all other opponents.
+   If you are the seed receiver, go to "Actions" -> "Upload Board Settings" and select the txt you received from your opponent.
 2. Put your board into place mode by going to the "Board Mode" -> "Place Mode (Visible)".
 3. Place your ships. Confirm with your opponent what the ship sizes will be (standard is 5,4,3,3,2). Placed ships will show up in blue.
 4. Once you have placed your ships, go to "Actions" -> "Download Ship Layout". This will create a file called "ships.zip."
 5. Send the ships.zip file to your partner. This is how your partner will know whether they hit or miss your ships mid-run.
 6. To get your opponent's ship data tracked, go to "Actions" -> "Upload Ship Layout" and select the "ships.zip" file you just received.
 7. If you want autotracking, go to "Actions" -> "Start Autotracking". Note that it is recommended you wait until the game is loaded in before doing this.
-8. If you did all of the above steps successfully, your ships that were marked blue have disappeared and the board is all black. You're ready to play!
+8. If you did all of the above steps successfully, your ships that were marked blue have green borders and the board is all black. You're ready to play!
    The button will turn blue if the check is a miss and red if the check is a hit.
 
 # Same Board Mode
@@ -50,17 +50,15 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 11. <ins>Presets</ins>: :white_check_mark: Included in v1.1.2.
 12. <ins>Image and Window Quality</ins>: Make errors popout windows and improve image/window size quality with changing grid size. ETA: 2-3 weeks (from 7/24/22). Partially included in v1.0.1.
 13. <ins>Autotracking</ins>: The ability for the button to be pressed once the check is found in KH2. :white_check_mark: Included in v1.2.0.
+14. <ins>Boss Enemy Autotracking</ins>: Track the new boss instead of the replaced one in boss enemy seeds. :white_check_mark: Included in v1.3.0.
 14. <ins>Markdown Assistance</ins>: The ability to right click to help you mark what might be important (or not important). ETA: 1-2 months (from 7/15/22)
 15. <ins>Include icons with Xs to indicate sunken checks.</ins> ETA: ? Whenever someone wants to develop those icons.
 
 # Autotracking
 
-All bosses and checks are autotracked. Only 4 exceptions exist to this.
+All bosses and checks are autotracked. Only 1 exception exists.
 
 1. Light and Darkness will NOT trigger final form on the board. This is intentional. If you want to play so that L&D counts as finding final, you can manually click final.
-2. Armored Xemnas is not autotracked. However, you will have to load in the game again anyways, so you have plenty of time to mark him.
-3. Axel 1 DOES autotrack, but only AFTER beating Setzer. This may get fixed in the future, but for now if you don't want to fight Setzer, you'll have to manually mark Axel 1.
-4. Grim Reaper 1 DOES NOT autotrack. This may get fixed in the future, but for now you will have to manually mark Grim Reaper 1.
 
 # Credits
 
@@ -86,3 +84,4 @@ All bosses and checks are autotracked. Only 4 exceptions exist to this.
 * Glint
 * WallpeSH
 * CrazyComics
+* Zeddikus
