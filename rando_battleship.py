@@ -887,6 +887,10 @@ def make_replacements_dict():
         spoiler_file = open('enemyspoilers/enemyspoilers.txt')
         replacements = spoiler_file.readlines()[:56]
 
+        # only care about the lines with actual replacements
+        replacements = [x for x in replacements if 'became' in x]
+        print(replacements)
+
         # filter relevant replacements and remove unnecessary whitespace
         replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)][1:]
 
