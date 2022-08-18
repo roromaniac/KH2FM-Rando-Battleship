@@ -889,14 +889,12 @@ def make_replacements_dict():
 
         # only care about the lines with actual replacements
         replacements = [x for x in replacements if 'became' in x]
-        print(replacements)
 
         # filter relevant replacements and remove unnecessary whitespace
         replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)][1:]
 
         # make the json dict of replacements
         replacements_dict = {}
-        print(replacements)
         for replacement in replacements:
             entry = replacement.split('became')
             entry[0] = entry[0].strip().replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
