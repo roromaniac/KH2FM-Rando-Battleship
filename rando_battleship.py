@@ -3,7 +3,6 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 import random
 import os
-from click import command
 import numpy as np
 import string
 import subprocess
@@ -11,8 +10,6 @@ import shutil
 import webbrowser
 import json
 import itertools as it
-import threading
-from cryptography.fernet import Fernet
 import ast
 
 from tkinter import filedialog as fd
@@ -391,6 +388,17 @@ class BattleshipBoard():
         self.root.after(self.latency, self.autotracking)
 
 
+    def resize_image(self, event):
+        new_width = int(self.root.winfo_width() / (self.col_size*1.4))
+        new_height = int(self.root.winfo_height() / (self.row_size*1.4))
+        square_dim = min(new_width, new_height)
+        self.image_dict = {}
+        for row_index in range(self.row_size):
+            for col_index in range(self.col_size):
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(Image.open(f"img/{self.check_names[row_index*self.row_size + col_index]}").resize((square_dim, square_dim)))
+                self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+
+
     def generate_card(self, row_size, col_size, seedname=None, event=None):
         self.root.geometry(f"{64*row_size}x{64*col_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
@@ -434,6 +442,7 @@ class BattleshipBoard():
         print("New Card Generation Detected: Checks Removed are")
         print("------------------------------------------------")
         [print(removed_check) for removed_check in list(checks_not_included)]
+        self.frame.bind("<Configure>", self.resize_image)
 
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None):
@@ -559,6 +568,7 @@ class BattleshipBoard():
 
             entries[i] = ttk.Entry(window, width = 5)
             entries[i].grid(row = i, column = 1)
+            entries[i].insert(0, sum([ship == i for ship in self.ship_sizes]))
 
         btn = ttk.Button(window, text = "Submit Answers", command = lambda: self.set_ship_sizes(entries, window))
         btn.grid(row = i+1, column = 1)
