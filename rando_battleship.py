@@ -25,7 +25,7 @@ class BattleshipBoard():
         # attribute setting
         self.row_size, self.col_size = row_size, col_size
         self.ship_sizes = [5, 4, 3, 3, 2]
-        self.latency = 1.5
+        self.latency = 2
 
         # checks allowed on grid
         self.check_types = [ 
@@ -140,9 +140,8 @@ class BattleshipBoard():
 
         self.root.config(menu=menubar)
         self.root.mainloop()
-        if hasattr(self, 'current_timer'):
+        if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
-            self.current_timer.cancel()
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -160,7 +159,6 @@ class BattleshipBoard():
             self.latency = float(simpledialog.askstring(title="Latency Timer", prompt="Set Latency to: ", initialvalue=1.5))
         except TypeError:
             print("Make sure latency is an actual number.")
-
 
 
     def place_ship(self, x, y, event=None):
@@ -383,18 +381,14 @@ class BattleshipBoard():
                 self.last_found_check = button_key
             except UnboundLocalError:
                 pass
-        self.current_timer.cancel()
-        self.current_timer = threading.Timer(self.latency, self.autotracking)
-        self.current_timer.start()
+        self.root.after(self.latency, self.autotracking)
 
 
     def autotracking_timer(self):
-        if hasattr(self, 'current_timer'):
-            self.current_timer.cancel()
+        if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
-        self.current_timer = threading.Timer(self.latency, self.autotracking)
-        self.current_timer.start()
+        self.root.after(self.latency, self.autotracking)
 
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
@@ -891,7 +885,7 @@ def make_replacements_dict():
         replacements = [x for x in replacements if 'became' in x]
 
         # filter relevant replacements and remove unnecessary whitespace
-        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)][1:]
+        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)]
 
         # make the json dict of replacements
         replacements_dict = {}
