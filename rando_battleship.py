@@ -11,6 +11,7 @@ import webbrowser
 import json
 import itertools as it
 import ast
+import time
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -389,20 +390,23 @@ class BattleshipBoard():
 
 
     def resize_image(self, event):
+        start = time.time()
         new_width = int(self.root.winfo_width() / (self.col_size*1.4))
         new_height = int(self.root.winfo_height() / (self.row_size*1.4))
         square_dim = min(new_width, new_height)
         self.image_dict = {}
+        print((end := time.time()) - start)
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
-                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(Image.open(f"img/{self.check_names[row_index*self.row_size + col_index]}").resize((square_dim, square_dim)))
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.raw_images[row_index*self.row_size + col_index].resize((square_dim, square_dim)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
-
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
         self.root.geometry(f"{64*row_size}x{64*col_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
+        # self.root.rowconfigure(0, weight=1)
+        # self.root.columnconfigure(0, weight=1)
 
         # battleship settings (images and sizes) and randomization
         if seedname is None:
@@ -411,7 +415,8 @@ class BattleshipBoard():
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
         random.Random(self.seedname).shuffle(self.check_names)
-        self.images = [ImageTk.PhotoImage(Image.open(f"img/{check}").resize((40,40))) for check in self.check_names]
+        self.raw_images = [Image.open(f"img/{check}").resize((40,40)) for check in self.check_names]
+        self.images = [ImageTk.PhotoImage(raw_image) for raw_image in self.raw_images]
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
             self.labels = [checktypes_dict[check] for check in self.check_names]
@@ -895,18 +900,19 @@ def make_replacements_dict():
         replacements = [x for x in replacements if 'became' in x]
 
         # filter relevant replacements and remove unnecessary whitespace
-        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement and "(1)" not in replacement)]
+        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement)]
 
         # make the json dict of replacements
         replacements_dict = {}
         for replacement in replacements:
             entry = replacement.split('became')
-            entry[0] = entry[0].strip().replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
-            entry[1] = entry[1].strip().replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
+            entry[0] = entry[0].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+            entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
+        print(replacements_dict)
 
     return replacements_dict
 
-
-BattleshipBoard() 
+if __name__ == '__main__':
+    BattleshipBoard() 
