@@ -338,9 +338,6 @@ class BattleshipBoard():
             val_list = list(self.autotracking_labels.values())
             for new_check in new_checks:
                 try:
-                    # don't want to invoke org members twice if you do their data
-                    if (new_check in self.important_checks_recorded):
-                        continue
                     self.important_checks_recorded.append(new_check)
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
@@ -372,7 +369,6 @@ class BattleshipBoard():
                 except ValueError:
                     if new_check != "Checks Collected":
                         print(f"The check {new_check} is not in the pool.")
-                        self.important_checks_recorded.append(new_check)
             try:
                 self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
                 self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
@@ -395,10 +391,9 @@ class BattleshipBoard():
         new_height = int(self.root.winfo_height() / (self.row_size*1.4))
         square_dim = min(new_width, new_height)
         self.image_dict = {}
-        print((end := time.time()) - start)
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
-                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.raw_images[row_index*self.row_size + col_index].resize((square_dim, square_dim)))
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.raw_images[row_index*self.col_size + col_index].resize((square_dim, square_dim)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
@@ -435,11 +430,11 @@ class BattleshipBoard():
             for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
-                self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.row_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
                                                                         self.change_button_color("black", self.marking_color, row_index, col_index, "#333333", False))
-                self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.row_size + col_index][:-5]
+                self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
 
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
         checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
@@ -910,7 +905,6 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
-        print(replacements_dict)
 
     return replacements_dict
 
