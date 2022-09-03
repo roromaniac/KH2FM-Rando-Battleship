@@ -1,3 +1,4 @@
+from sys import stdout
 from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
@@ -790,7 +791,9 @@ class BattleshipBoard():
                 self.replacements = make_replacements_dict()
                 shutil.rmtree('enemyspoilers')
             else:
-                self.replacements = ast.literal_eval(subprocess.check_output(['autotracker/encrypt_replacements.exe', f'{filename}']).decode('utf-8'))
+                shutil.rmtree('enemyspoilers')
+                replacements = subprocess.check_output([os.path.join('autotracker', 'encrypt_replacements.exe'), f'{filename}'], shell=True)
+                self.replacements = ast.literal_eval(replacements.decode('utf-8'))
             popup = Tk()
             popup.wm_title("Success!")
             label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
