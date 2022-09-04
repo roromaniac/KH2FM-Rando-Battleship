@@ -36,6 +36,14 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 5. (Everyone) Select "Board Mode" -> "Same Board Mode". Now all players have the same battleships hidden but loaded.
 6. (Everyone) If you want autotracking, go to "Actions" -> "Start Autotracking". Note that it is recommended you wait until the game is loaded in before doing this.
 
+# Boss Enemy (Bingo) Autotracking
+1. (Card Generator Only) Generate a new card with the settings you want (the tracker comes with a boss enemy bingo preset that you can resize if you want fewer/more bosses).
+3. (Card Generator Only) Go to "Actions" -> "Download Board Settings"
+4. (Card Generator Only) Send the settings.txt file in your battleships folder to all participants.
+5. (All Other Participants) Upload the settings.txt you received from the card generator and confirm you have the same card.
+6. (Everyone) Go to "Actions" -> "Load Boss Enemy Seed" and select the zip seed of the boss enemy seed you created.
+7. (Everyone) Start the autotracking by going to "Actions" -> "Start Autotracking". The autotracking will track the replaced bosses!
+
 # Features in Development (and their expected release dates).
 1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark: Included in v0.9.1.
 2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. :white_check_mark: Included in v1.0.0.
@@ -85,3 +93,7 @@ All bosses and checks are autotracked. Only 1 exception exists.
 * WallpeSH
 * CrazyComics
 * Zeddikus
+* ultimajc (Josh)
+* MegaSlim
+* Ragna
+* Dragonblast
