@@ -1,6 +1,7 @@
 from sys import stdout
 from tkinter import *
 from tkinter import ttk
+from tkinter.colorchooser import askcolor
 from PIL import ImageTk, Image
 import random
 import os
@@ -12,7 +13,6 @@ import webbrowser
 import json
 import itertools as it
 import ast
-import time
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -20,6 +20,9 @@ from tkinter import simpledialog
 class BattleshipBoard():
 
     def __init__(self, row_size=11, col_size=11):
+
+        # tracker settings
+        self.color_types = 6
 
         # attribute setting
         self.row_size, self.col_size = row_size, col_size
@@ -57,14 +60,20 @@ class BattleshipBoard():
         np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
 
         # reset the autotracker
+        self.bingo = False
         self.armored_xemnas_found = False
+        self.armored_xemnas_seen = False
         self.important_checks_recorded = []
+        self.seen_bosses_recorded = []
+        self.checks_found = np.zeros((self.row_size, self.col_size))
         if os.path.exists('checks.txt'):
             os.remove('checks.txt')
+        if os.path.exists('seenbosses.txt'):
+            os.remove('seenbosses.txt')
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v1.3.0)")
+        self.root.title("Rando Battleship (v2.0.0)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -72,14 +81,20 @@ class BattleshipBoard():
         # Create Shortcuts
         self.root.bind_all("<Control-b>", lambda event: self.place_mode(self.row_size, self.col_size, blind=True))
         self.root.bind_all("<Control-v>", lambda event: self.place_mode(self.row_size, self.col_size, blind=False))
-        self.root.bind_all("<Control-s>", lambda event: self.upload(True))
+        self.root.bind_all("<Control-s>", lambda event: self.upload_ship_layout(True))
         self.root.bind_all("<Control-c>", lambda event: self.place_mode(self.row_size, self.col_size, blind=self.blind))
         self.root.bind_all("<Control-g>", lambda event: self.generate_card(self.row_size, self.col_size))
         self.root.bind_all("<Control-r>", self.resize_grid)
         self.root.bind_all("<Control-i>", self.copy_seed)
-        self.root.bind_all("<Control-u>", lambda event: self.upload(False))
-        self.root.bind_all("<Control-d>", self.download)
+        self.root.bind_all("<Control-u>", lambda event: self.upload_ship_layout(False))
+        self.root.bind_all("<Control-d>", self.download_ship_layout)
         self.root.bind_all("<Control-h>", self.open_help_window)
+
+        # Create Marking Color (should be saved in tracker_settings)
+        with open("tracker_settings.txt", "r") as settings_file:
+            settings = settings_file.readlines()
+            for line in settings:
+                exec(line)
 
         self.generate_card(self.row_size, self.col_size)
 
@@ -93,7 +108,7 @@ class BattleshipBoard():
         board_mode = Menu(menubar, tearoff = False)
         board_mode.add_command(label='Place Mode (Blind)', underline=5, command=lambda: self.place_mode(self.row_size, self.col_size, blind=True), accelerator="Ctrl+B")
         board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False), accelerator="Ctrl+V")
-        board_mode.add_command(label='Same Board Mode', command=lambda: self.upload(True), accelerator="Ctrl+S")
+        board_mode.add_command(label='Same Board Mode', command=lambda: self.upload_ship_layout(True), accelerator="Ctrl+S")
         board_mode.add_command(label='Clear Placements', command=lambda: self.place_mode(self.row_size, self.col_size, blind=self.blind), accelerator="Ctrl+C")
         menubar.add_cascade(label ='Placement', menu=board_mode)
 
@@ -104,10 +119,10 @@ class BattleshipBoard():
         actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: ")))
         actions.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
-        actions.add_command(label = 'Upload Ship Layout', command=self.upload, accelerator="Ctrl+U")
-        actions.add_command(label = 'Download Ship Layout', command=self.download, accelerator="Ctrl+D")
-        actions.add_command(label = 'Download Board Settings', command=self.save_settings)
-        actions.add_command(label = 'Upload Board Settings', command=self.load_settings)
+        actions.add_command(label = 'Load Ship Layout', command=self.upload_ship_layout, accelerator="Ctrl+U")
+        actions.add_command(label = 'Save Ship Layout', command=self.download_ship_layout, accelerator="Ctrl+D")
+        actions.add_command(label = 'Save Board Settings', command=self.save_settings)
+        actions.add_command(label = 'Load Board Settings', command=self.load_settings)
         actions.add_command(label = 'Save Settings as New Preset', command=lambda: self.save_settings(True))
         actions.add_command(label = 'Start Autotracking', command=self.autotracking_timer)
         actions.add_command(label = 'Load Boss Enemy Seed', command=self.load_bunter_seed)
@@ -120,6 +135,8 @@ class BattleshipBoard():
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
         customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
+        customize.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
+        customize.add_command(label = 'Change Icon Style', command=self.set_icon_style)
         menubar.add_cascade(label = 'Customize', menu=customize)
 
 
@@ -134,13 +151,19 @@ class BattleshipBoard():
         self.info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
         menubar.add_cascade(label = 'Info', menu=self.info)
 
-        # Create Marking Color
-        self.marking_color = "green"
-
         self.root.config(menu=menubar)
         self.root.mainloop()
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
+
+
+    def set_icon_style(self):
+        if self.icons == "televo":
+            self.icons = "sonic"
+        elif self.icons == "sonic":
+            self.icons = "televo"
+        self.update_tracker_settings(self.icons)
+        self.generate_card(self.row_size, self.col_size, self.seedname)
 
 
     def set_style(self, name, background, bordercolor, highlightthickness, padding):
@@ -151,6 +174,80 @@ class BattleshipBoard():
 
     def set_seedname(self, new_seedname):
         self.seedname = new_seedname
+
+
+    def update_tracker_settings(self, new_data):
+        if type(new_data) == str:
+            with open("tracker_settings.txt", "w") as f:
+                f.write(f"self.icons = '{new_data}'\n")
+                f.write(f"self.marking_colors = {self.marking_colors}")
+        elif type(new_data) == dict:
+            with open("tracker_settings.txt", "w") as f:
+                f.write(f"self.icons = '{self.icons}'\n")
+                f.write(f"self.marking_colors = {new_data}")
+
+
+    def change_marking_colors(self, color_list = ["white"]):
+
+        if len(color_list) < self.color_types:
+            color_list += ["white"] * (self.color_types-len(color_list))
+
+        window = Tk() 
+        window.title("Color Settings")
+        window.geometry("250x210")
+
+        window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
+        self.root.update_idletasks()
+        popup_width, popup_height = window.winfo_width(), window.winfo_height()
+        window.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 3 * popup_height//10}")
+
+        TitleLabel = ttk.Label(window, text = "Mode")
+        TitleLabel.grid(row = 0, column = 1)
+
+        labels = {}
+        entries = {}
+
+        modes = ["Marking Color", "Annotating Color", "Battleship Miss", "Battleship Hit", "Battleship Sink", "Bingo (Bunter)"]
+
+        def change_color(i, modes = modes, color_list=color_list):
+            colors = askcolor(title="Tkinter Color Chooser")
+            self.marking_colors[modes[i - 1]] = colors[1]
+            self.update_tracker_settings(self.marking_colors)
+            # write the color dict to tracker settings line 2
+            color_list[i - 1] = colors[1]
+            window.destroy()
+            self.change_marking_colors(color_list)
+
+        for i in range(1, len(modes) + 1):
+
+            labels[i] = ttk.Label(window, text = modes[i - 1], anchor='w', takefocus=False)
+            labels[i].grid(row = i, column = 0)
+
+            # have the colors be the default from tracker settings
+            new_style = ttk.Style(window)
+            new_style.theme_use('alt')
+            new_style.configure(f"settings{i}.TButton", background = color_list[i - 1])
+            entries[i] = ttk.Button(window, style = f"settings{i}.TButton", cursor=None, command=lambda i=i: change_color(i))
+            entries[i].configure(width=5) # can we change the height?
+            entries[i].grid(row = i, column = 1)
+
+        btn0 = ttk.Button(window, text = "Restore to Default Colors", command = lambda window=window: self.restore_default_colors(window))
+        btn0.grid(row = i+1, column = 0) 
+
+        btn1 = ttk.Button(window, text = "Submit Toggles", command = lambda window=window: self.set_marking_colors(window))
+        btn1.grid(row = i+1, column = 1)
+
+        # self.generate_card(self.row_size, self.col_size, self.seedname)
+
+    def restore_default_colors(self, window):
+        self.marking_colors = {"Marking Color": "green", "Battleship Miss": "#0077be", "Battleship Hit": "red", "Battleship Sink": "pink", "Bingo (Bunter)": "purple"}
+        self.update_tracker_settings(self.marking_colors)
+        print(self.marking_colors)
+        window.destroy()
+        self.change_marking_colors([v for v in self.marking_colors.values()])
+
+    def set_marking_colors(self, window):
+        window.destroy()
 
     
     def set_latency(self):
@@ -263,16 +360,18 @@ class BattleshipBoard():
         return placed_ships
 
 
-    def download(self, event=None):
+    def download_ship_layout(self, event=None):
         try:
             os.makedirs('ships')
         except FileExistsError:
             pass
         np.savetxt("ships/ships.txt", self.place_grid, fmt='%s')
         shutil.make_archive('ships/', 'zip', 'ships')
+        subprocess.Popen(r'explorer /open,"."')
+        
 
 
-    def upload(self, same_board=False, event=None):
+    def upload_ship_layout(self, same_board=False, event=None):
 
         # if you're uploading a manually placed board
         if not same_board:
@@ -293,15 +392,29 @@ class BattleshipBoard():
             opponent_ships = self.generate_same_board(self.row_size, self.col_size)
 
         # load new board if there are ships to be hit
+        window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
+        popup = Tk()
         if np.sum(opponent_ships) == 0:
-            all_zeros_window = Toplevel(self.root)
-            all_zeros_window.geometry("750x750")
-            all_zeros_window.title("Child Window")
-            Label(all_zeros_window, text= '''The zip file you received is all misses. 
-                                             Ask your opponent to send you the correct zip 
-                                             by placing the board in place mode and downloading 
-                                             the ship layout.''',
-                                             font=('Impact 9 bold')).place(anchor=CENTER, relx=0.5, rely=0.5)
+            popup.wm_title("WARNING!")
+            popup.geometry("530x80")
+            self.root.update_idletasks()
+            popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+            popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+            label = ttk.Label(popup, text='WARNING: The zip file of the ship layouts has only misses. \n                     Double check that you uploaded the right zip and that your opponent sent the right file.')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
+        else:
+            popup.wm_title("Success!")
+            popup.geometry("155x70")
+            self.root.update_idletasks()
+            popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+            popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+            label = ttk.Label(popup, text='Ships successfully loaded! :-)')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
+
         
         # remove opponent ships file to avoid cheating
         if os.path.exists('ships.txt'):
@@ -309,11 +422,10 @@ class BattleshipBoard():
 
         self.opponent_ships_with_ids = self.find_ships(opponent_ships)
         self.ships_left = list(range(1, int(np.max(self.opponent_ships_with_ids)) + 1))
-        self.checks_found = np.zeros((self.row_size, self.col_size))
 
         for x in range(self.row_size):
             for y in range(self.col_size):
-                hit_or_miss_color = "red" if opponent_ships[x,y] == 1 else "#0077be"
+                hit_or_miss_color = self.marking_colors["Battleship Hit"] if opponent_ships[x,y] == 1 else self.marking_colors["Battleship Miss"]
                 if not same_board:
                     # #099125
                     border_color = "#22bb41" if your_ships[x][y] == 1 else "#333333"
@@ -328,6 +440,38 @@ class BattleshipBoard():
 
     def autotracking(self):
 
+        key_list = list(self.autotracking_labels.keys())
+        val_list = list(self.autotracking_labels.values())
+
+        # read found bosses
+        if os.path.exists('seenbosses.txt'):
+            with open("seenbosses.txt") as seenbosses_from_DAs_tracker:
+                seen_bosses = seenbosses_from_DAs_tracker.read().splitlines()
+            # check if any new bosses were seen
+            new_bosses = list(set(seen_bosses) - set(self.seen_bosses_recorded))
+            for new_boss in new_bosses:
+                try:
+                    self.seen_bosses_recorded.append(new_boss)
+                    # if boss enemy has been invoked...
+                    if hasattr(self, 'replacements'):
+
+                        # in boss enemy we don't want to track Future Pete
+                        if new_boss == "Pete":
+                            continue
+                        # try to get the randomized boss instead of the vanilla boss
+                        try:
+                            new_boss = self.replacements[new_boss]
+                        # if the check isn't a randomizable boss, quit
+                        except KeyError:
+                            pass
+                    button_key = key_list[val_list.index(new_boss)]
+                    print(ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'))
+                    self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
+                    print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'bordercolor'))
+                    self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
+                except ValueError:
+                    print(f"The not yet beaten boss {new_boss} is not in the pool.")
+
         # read txt
         if os.path.exists('checks.txt'):
             with open("checks.txt") as checks_from_DAs_tracker:
@@ -335,8 +479,6 @@ class BattleshipBoard():
             # check if any new checks were collected
             new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
             # invoke the appropriate button
-            key_list = list(self.autotracking_labels.keys())
-            val_list = list(self.autotracking_labels.values())
             for new_check in new_checks:
                 try:
                     self.important_checks_recorded.append(new_check)
@@ -387,7 +529,6 @@ class BattleshipBoard():
 
 
     def resize_image(self, event):
-        start = time.time()
         new_width = int(self.root.winfo_width() / (self.col_size*1.4))
         new_height = int(self.root.winfo_height() / (self.row_size*1.4))
         square_dim = min(new_width, new_height)
@@ -397,21 +538,26 @@ class BattleshipBoard():
                 self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.raw_images[row_index*self.col_size + col_index].resize((square_dim, square_dim)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
 
+
     def generate_card(self, row_size, col_size, seedname=None, event=None):
+        self.checks_found = np.zeros((row_size, col_size))
         self.root.geometry(f"{64*row_size}x{64*col_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         # self.root.rowconfigure(0, weight=1)
         # self.root.columnconfigure(0, weight=1)
+        if self.bingo:
+            assert(row_size == col_size), "The bingo board is not square!"
+            self.possible_bingos = self.identify_bingos(row_size)
 
         # battleship settings (images and sizes) and randomization
         if seedname is None:
             self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
-        self.check_names = [x for x in os.listdir("img")]
+        self.check_names = [x for x in os.listdir(f"img/{self.icons}")]
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
         random.Random(self.seedname).shuffle(self.check_names)
-        self.raw_images = [Image.open(f"img/{check}").resize((40,40)) for check in self.check_names]
+        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((40,40)) for check in self.check_names]
         self.images = [ImageTk.PhotoImage(raw_image) for raw_image in self.raw_images]
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
@@ -432,18 +578,42 @@ class BattleshipBoard():
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                # self.button_dict[(row_index, col_index)].focus_set()
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_color, row_index, col_index, "#333333", False))
+                                                                        self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "#333333", False))
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
 
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
-        checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir('img')) - set(x[:-5] for x in self.check_names))
+        checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir(f'img/{self.icons}')) - set(x[:-5] for x in self.check_names))
         print("------------------------------------------------")
         print("New Card Generation Detected: Checks Removed are")
         print("------------------------------------------------")
         [print(removed_check) for removed_check in list(checks_not_included)]
         self.frame.bind("<Configure>", self.resize_image)
+
+
+    def identify_bingos(self, dimension):
+        bingo_arrays = []
+        left_diag = np.zeros((dimension, dimension))
+        right_diag = np.zeros((dimension, dimension))
+        rows = np.zeros((dimension, dimension))
+        columns = np.zeros((dimension, dimension))
+        for i in range(dimension):
+            rows[i] = np.ones(dimension)
+            columns[:, i] = np.ones(dimension)
+            left_diag[i, i] = 1
+            right_diag[i, dimension - i - 1] = 1
+            bingo_arrays.append(rows)
+            bingo_arrays.append(columns)
+            rows = np.zeros((dimension, dimension))
+            columns = np.zeros((dimension, dimension))
+        bingo_arrays.append(left_diag)
+        bingo_arrays.append(right_diag)
+        return bingo_arrays
+
 
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None):
@@ -456,17 +626,28 @@ class BattleshipBoard():
         self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                         self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
-        # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
-        if not placing_ship and hasattr(self, 'checks_found'):
+        if not placing_ship:
             self.checks_found[row_index, col_index] = 1
-            for id in self.ships_left:
-                xs, ys = np.where(self.opponent_ships_with_ids == id)
-                if all([value == 1 for value in [ self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
-                    for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                        self.set_style(f"bclicked{index_x}{index_y}.TButton", background="pink", bordercolor=current_border_color, highlightthickness=10, padding=0)
-                        self.button_dict[(index_x, index_y)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
-                                                                            self.change_button_color("pink", "pink", row_index, col_index, current_border_color, placing_ship))
-                    self.ships_left.remove(id)
+            # check if a bingo has been achieved
+            if self.bingo:
+                for possible_bingo in self.possible_bingos:
+                    if np.sum(possible_bingo * self.checks_found) == self.row_size:
+                        xs, ys = np.where(possible_bingo == 1)
+                        for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                            self.set_style(f"bbingo{index_x}{index_y}.TButton", background=self.marking_colors["Bingo (Bunter)"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                            self.button_dict[(index_x, index_y)].configure(style=f"bbingo{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                self.change_button_color(self.marking_colors["Bingo (Bunter)"], self.marking_colors["Bingo (Bunter)"], row_index, col_index, current_border_color, placing_ship))
+            
+            # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
+            elif hasattr(self, 'ships_left'):
+                for id in self.ships_left:
+                    xs, ys = np.where(self.opponent_ships_with_ids == id)
+                    if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                        for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                            self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                            self.button_dict[(index_x, index_y)].configure(style=f"bclicked{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
+                        self.ships_left.remove(id)
 
 
     def copy_seed(self, event=None):
@@ -576,7 +757,7 @@ class BattleshipBoard():
 
 
     def set_checks(self, entries, window, gen_card=True):
-        self.check_names = [x for x in os.listdir("img")]
+        self.check_names = [x for x in os.listdir(f"img/{self.icons}")]
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
             self.labels = [checktypes_dict[check] for check in self.check_names]
@@ -766,6 +947,8 @@ class BattleshipBoard():
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+        
+        subprocess.Popen(r'explorer /open,"."')
     
 
     def load_settings(self):
@@ -794,12 +977,28 @@ class BattleshipBoard():
                 shutil.rmtree('enemyspoilers')
                 replacements = subprocess.check_output([os.path.join('autotracker', 'encrypt_replacements.exe'), f'{filename}'], shell=True)
                 self.replacements = ast.literal_eval(replacements.decode('utf-8'))
+            window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
-            popup.wm_title("Success!")
-            label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
-            label.pack(side="top", fill="x", pady=10)
-            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
-            B1.pack()
+            if type(self.replacements) == tuple:
+                popup.wm_title("WARNING!")
+                popup.geometry("380x80")
+                self.root.update_idletasks()
+                popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+                popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+                label = ttk.Label(popup, text='WARNING: This seed has a replacement that will likely crash your game. \n                     We recommend re-rolling.')
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+                B1.pack()
+            else:
+                popup.wm_title("Success!")
+                popup.geometry("217x70")
+                self.root.update_idletasks()
+                popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+                popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+                label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+                B1.pack()
 
         except:
             if os.path.exists('enemyspoilers'):
@@ -892,7 +1091,9 @@ def make_replacements_dict():
     if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
 
         spoiler_file = open('enemyspoilers/enemyspoilers.txt')
-        replacements = spoiler_file.readlines()[:56]
+        replacements = spoiler_file.readlines()
+
+        replacements = replacements[:(replacements.index('\n'))]
 
         # only care about the lines with actual replacements
         replacements = [x for x in replacements if 'became' in x]
@@ -908,6 +1109,18 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
+        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx")]
+        if "Luxord became Luxord (Data)" in replacements:
+            print("IN HERE")
+            return ("ERROR", replacements_dict)
+        for replacement in blacklisted_pairs:
+            k, v = replacement
+            try:
+                if replacements_dict[k] == v:
+                    return ("ERROR", replacements_dict)
+            except KeyError:
+                pass
+
 
     return replacements_dict
 
