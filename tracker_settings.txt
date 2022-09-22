@@ -1,2 +1,2 @@
 self.icons = 'sonic'
-self.marking_colors = {'Marking Color': 'green', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': 'purple'}
+self.marking_colors = {'Marking Color': 'green', 'Annotating Color': '#FFAC1C', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': 'purple'}

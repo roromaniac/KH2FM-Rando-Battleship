@@ -17,6 +17,8 @@ import ast
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 
+from PIL import Image
+
 class BattleshipBoard():
 
     def __init__(self, row_size=11, col_size=11):
@@ -443,35 +445,6 @@ class BattleshipBoard():
         key_list = list(self.autotracking_labels.keys())
         val_list = list(self.autotracking_labels.values())
 
-        # read found bosses
-        if os.path.exists('seenbosses.txt'):
-            with open("seenbosses.txt") as seenbosses_from_DAs_tracker:
-                seen_bosses = seenbosses_from_DAs_tracker.read().splitlines()
-            # check if any new bosses were seen
-            new_bosses = list(set(seen_bosses) - set(self.seen_bosses_recorded))
-            for new_boss in new_bosses:
-                try:
-                    self.seen_bosses_recorded.append(new_boss)
-                    # if boss enemy has been invoked...
-                    if hasattr(self, 'replacements'):
-
-                        # in boss enemy we don't want to track Future Pete
-                        if new_boss == "Pete":
-                            continue
-                        # try to get the randomized boss instead of the vanilla boss
-                        try:
-                            new_boss = self.replacements[new_boss]
-                        # if the check isn't a randomizable boss, quit
-                        except KeyError:
-                            pass
-                    button_key = key_list[val_list.index(new_boss)]
-                    print(ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'))
-                    self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
-                    print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'bordercolor'))
-                    self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
-                except ValueError:
-                    print(f"The not yet beaten boss {new_boss} is not in the pool.")
-
         # read txt
         if os.path.exists('checks.txt'):
             with open("checks.txt") as checks_from_DAs_tracker:
@@ -507,17 +480,59 @@ class BattleshipBoard():
                     button_key = key_list[val_list.index(new_check)]
                     self.button_dict[button_key].invoke()
                     if hasattr(self, "last_found_check") and len(new_checks) != 0:
-                        self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
-                        self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
+                        if ttk.Style().lookup(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background') != self.marking_colors["Bingo (Bunter)"]:
+                            self.set_style(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
+                            self.button_dict[self.last_found_check].configure(style=f"bclicked{self.last_found_check[0]}{self.last_found_check[1]}.TButton")
+                        else:
+                            self.set_style(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
+                            self.button_dict[self.last_found_check].configure(style=f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton")                            
                 except ValueError:
                     if new_check != "Checks Collected":
                         print(f"The check {new_check} is not in the pool.")
             try:
-                self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
+                if ttk.Style().lookup(f"bbingo{button_key[0]}{button_key[1]}.TButton", 'background') != self.marking_colors["Bingo (Bunter)"]:
+                    self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
+                else:
+                    self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bbingo{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
                 self.button_dict[button_key].configure(style=f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton")
                 self.last_found_check = button_key
+
             except UnboundLocalError:
                 pass
+
+        # read found bosses
+        # happens AFTER b/c we don't want to create the mostrecentlyfound check for a boss that hasn't been beaten yet
+        if os.path.exists('seenbosses.txt'):
+            with open("seenbosses.txt") as seenbosses_from_DAs_tracker:
+                seen_bosses = seenbosses_from_DAs_tracker.read().splitlines()
+            # check if any new bosses were seen
+            new_bosses = list(set(seen_bosses) - set(self.seen_bosses_recorded))
+            for new_boss in new_bosses:
+                if new_boss in self.important_checks_recorded:
+                    continue
+                try:
+                    self.seen_bosses_recorded.append(new_boss)
+                    # if boss enemy has been invoked...
+                    if hasattr(self, 'replacements'):
+
+                        # in boss enemy we don't want to track Future Pete
+                        if new_boss == "Pete":
+                            continue
+                        # try to get the randomized boss instead of the vanilla boss
+                        try:
+                            new_boss = self.replacements[new_boss]
+                        # if the check isn't a randomizable boss, quit
+                        except KeyError:
+                            pass
+                    button_key = key_list[val_list.index(new_boss)]
+                    # print(ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'))
+                    self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
+                    # print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'background'))
+                    # print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'bordercolor'))
+                    self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
+                except ValueError:
+                    print(f"The not yet beaten boss {new_boss} is not in the pool.")
+    
         self.root.after(self.latency, self.autotracking)
 
 
@@ -541,14 +556,11 @@ class BattleshipBoard():
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
         self.checks_found = np.zeros((row_size, col_size))
-        self.root.geometry(f"{64*row_size}x{64*col_size}")
+        self.root.geometry(f"{64*col_size}x{64*row_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         # self.root.rowconfigure(0, weight=1)
         # self.root.columnconfigure(0, weight=1)
-        if self.bingo:
-            assert(row_size == col_size), "The bingo board is not square!"
-            self.possible_bingos = self.identify_bingos(row_size)
 
         # battleship settings (images and sizes) and randomization
         if seedname is None:
@@ -583,8 +595,25 @@ class BattleshipBoard():
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
                                                                         self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "#333333", False))
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False))
+                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False, right_clicked=True))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
+
+        # setup bingo logic if bingo and board is square
+        if self.bingo:
+            if (row_size != col_size):
+                window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
+                popup = Tk()
+                popup.wm_title("Warning!")
+                popup.geometry("380x80")
+                # self.root.update_idletasks()
+                popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+                popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+                label = ttk.Label(popup, text='ERROR: Bingo board must be square.')
+                label.pack(side="top", fill="x", pady=10)
+                B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+                B1.pack()
+            else:
+                self.possible_bingos = self.identify_bingos(row_size)
 
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
         checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir(f'img/{self.icons}')) - set(x[:-5] for x in self.check_names))
@@ -616,38 +645,98 @@ class BattleshipBoard():
 
 
 
-    def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None):
-        # place new ship if in place mode
-        if placing_ship:
-            self.place_ship(row_index, col_index)
+    def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None, right_clicked=False):
+        
+        # don't change button functionality if we're just making notes
+        if right_clicked:
+            # change the style to annotated
+            if hasattr(self, "last_found_check") and self.last_found_check == (row_index, col_index):
+                current_border_color = "yellow"
+            elif ttk.Style().lookup(f"bbossfound{row_index}{col_index}.TButton", "bordercolor") == "blue" and ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == "#d9d9d9":
+                current_border_color = "blue"
+            self.set_style(f"bnoted{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
+            self.button_dict[(row_index, col_index)].configure(style=f"bnoted{row_index}{col_index}.TButton")
+            # figure out what the previous background color was so if we uncheck it the right background shows
+            if ttk.Style().lookup(f"bbingo{row_index}{col_index}.TButton", 'background') == self.marking_colors["Bingo (Bunter)"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Bingo (Bunter)"]
+                else:
+                    new_color = self.marking_colors["Bingo (Bunter)"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Marking Color"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Marking Color"]
+                else:
+                    new_color = self.marking_colors["Marking Color"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Miss"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Battleship Miss"]
+                else:
+                    new_color = self.marking_colors["Battleship Miss"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Hit"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Battleship Hit"]
+                else:
+                    new_color = self.marking_colors["Battleship Hit"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Sink"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Battleship Sink"]
+                else:
+                    new_color = self.marking_colors["Battleship Sink"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            else:
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+        else:
+            # place new ship if in place mode
+            if placing_ship:
+                self.place_ship(row_index, col_index)
 
-        # change button color
-        self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
-        self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
+            # change button color
+            self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
+            self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False, right_clicked=True))
+            # reset the annotation behavior
+            self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
-        if not placing_ship:
-            self.checks_found[row_index, col_index] = 1
-            # check if a bingo has been achieved
-            if self.bingo:
-                for possible_bingo in self.possible_bingos:
-                    if np.sum(possible_bingo * self.checks_found) == self.row_size:
-                        xs, ys = np.where(possible_bingo == 1)
-                        for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                            self.set_style(f"bbingo{index_x}{index_y}.TButton", background=self.marking_colors["Bingo (Bunter)"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                            self.button_dict[(index_x, index_y)].configure(style=f"bbingo{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
-                                                                                self.change_button_color(self.marking_colors["Bingo (Bunter)"], self.marking_colors["Bingo (Bunter)"], row_index, col_index, current_border_color, placing_ship))
-            
-            # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
-            elif hasattr(self, 'ships_left'):
-                for id in self.ships_left:
-                    xs, ys = np.where(self.opponent_ships_with_ids == id)
-                    if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
-                        for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                            self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                            self.button_dict[(index_x, index_y)].configure(style=f"bclicked{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
-                                                                                self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
-                        self.ships_left.remove(id)
+            if not placing_ship:
+                self.checks_found[row_index, col_index] = 1
+                # check if a bingo has been achieved
+                if self.bingo and self.row_size == self.col_size:
+                    for possible_bingo in self.possible_bingos:
+                        if np.sum(possible_bingo * self.checks_found) == self.row_size:
+                            xs, ys = np.where(possible_bingo == 1)
+                            for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                self.set_style(f"bbingo{index_x}{index_y}.TButton", background=self.marking_colors["Bingo (Bunter)"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.button_dict[(index_x, index_y)].configure(style=f"bbingo{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                    self.change_button_color(self.marking_colors["Bingo (Bunter)"], self.marking_colors["Bingo (Bunter)"], row_index, col_index, current_border_color, placing_ship))
+                
+                # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
+                elif hasattr(self, 'ships_left'):
+                    for id in self.ships_left:
+                        xs, ys = np.where(self.opponent_ships_with_ids == id)
+                        if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                            for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.row_size * index_x + index_y]}')
+                                sunk_foreground = Image.open("recusant_sigil.png").resize(sunk_background.size)
+                                # FIX THE RESIZING
+                                sunk_image = ImageTk.PhotoImage(Image.alpha_composite(sunk_background, sunk_foreground).resize((40, 40)))
+                                # sunk_image.save(f'img/sigils/sigil_{self.check_names[self.row_size * index_x + index_y]}')
+                                # sunk_image = ImageTk.PhotoImage(Image.open(f'img/sigils/sigil_{self.check_names[self.row_size * index_x + index_y]}'))
+                                self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bclicked{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                    self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
+                                self.button_dict[(index_x, index_y)].image = sunk_image
+                            self.ships_left.remove(id)
 
 
     def copy_seed(self, event=None):
