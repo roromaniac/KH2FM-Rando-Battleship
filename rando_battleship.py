@@ -242,9 +242,8 @@ class BattleshipBoard():
         # self.generate_card(self.row_size, self.col_size, self.seedname)
 
     def restore_default_colors(self, window):
-        self.marking_colors = {"Marking Color": "green", "Battleship Miss": "#0077be", "Battleship Hit": "red", "Battleship Sink": "pink", "Bingo (Bunter)": "purple"}
+        self.marking_colors = {"Marking Color": "green", 'Annotating Color': '#FFAC1C', "Battleship Miss": "#0077be", "Battleship Hit": "red", "Battleship Sink": "pink", "Bingo (Bunter)": "purple"}
         self.update_tracker_settings(self.marking_colors)
-        print(self.marking_colors)
         window.destroy()
         self.change_marking_colors([v for v in self.marking_colors.values()])
 
@@ -306,31 +305,31 @@ class BattleshipBoard():
                         if (x, y + i) not in possible_ship_heads:
                             break
                         if hasattr(self, 'restrictions'):
-                            if ((x * self.row_size + (y + i)) < len(self.labels)) and (self.labels[x * self.row_size + (y + i)] in self.restrictions.keys()):
-                                if restrictions_tracker[self.labels[x * self.row_size + (y + i)]] + 1 > self.restrictions[self.labels[x * self.row_size + (y + i)]]:
+                            if ((x * self.col_size + (y + i)) < len(self.labels)) and (self.labels[x * self.col_size + (y + i)] in self.restrictions.keys()):
+                                if restrictions_tracker[self.labels[x * self.col_size + (y + i)]] + 1 > self.restrictions[self.labels[x * self.col_size + (y + i)]]:
                                     break
                     # place the ship if possible
                     else:
                         valid_placement = True
                         for i in range(current_random_ship):
                             placed_ships[x, y + i] = 1
-                            if hasattr(self, 'restrictions') and (self.labels[x * self.row_size + (y + i)] in self.restrictions.keys()):
-                                restrictions_tracker[self.labels[x * self.row_size + (y + i)]] += 1
+                            if hasattr(self, 'restrictions') and (self.labels[x * self.col_size + (y + i)] in self.restrictions.keys()):
+                                restrictions_tracker[self.labels[x * self.col_size + (y + i)]] += 1
                 if direction == "down":
                     # check that you can place the ship
                     for i in range(current_random_ship):
                         if (x + i, y) not in possible_ship_heads:
                             break
                         if hasattr(self, 'restrictions'):
-                            if (((x + i) * self.row_size + y) < len(self.labels)) and (self.labels[(x + i) * self.row_size + y] in self.restrictions.keys()):
-                                if restrictions_tracker[self.labels[(x + i) * self.row_size + y]] + 1 > self.restrictions[self.labels[(x + i) * self.row_size + y]]:
+                            if (((x + i) * self.col_size + y) < len(self.labels)) and (self.labels[(x + i) * self.col_size + y] in self.restrictions.keys()):
+                                if restrictions_tracker[self.labels[(x + i) * self.col_size + y]] + 1 > self.restrictions[self.labels[(x + i) * self.col_size + y]]:
                                     break
                     else:
                         valid_placement = True
                         for i in range(current_random_ship):
                             placed_ships[x + i, y] = 1
-                            if hasattr(self, 'restrictions') and (self.labels[(x + i) * self.row_size + y] in self.restrictions.keys()):
-                                restrictions_tracker[self.labels[(x + i) * self.row_size + y]] += 1
+                            if hasattr(self, 'restrictions') and (self.labels[(x + i) * self.col_size + y] in self.restrictions.keys()):
+                                restrictions_tracker[self.labels[(x + i) * self.col_size + y]] += 1
                 # print(restrictions_tracker)
             xs, ys = np.where(placed_ships == 1)
             unavailable_placements = [[xs[j], ys[j]] for j in range(len(xs))]
@@ -524,14 +523,21 @@ class BattleshipBoard():
                         # if the check isn't a randomizable boss, quit
                         except KeyError:
                             pass
+                    # don't want to invoke armored xemnas twice to go back to unmarked
+                    if (new_boss == "ArmoredXemnas"):
+                        if self.armored_xemnas_seen:
+                            continue
+                        else:
+                            self.armored_xemnas_seen = True
+                    # track only first armored xem in vanilla battleships
+                    if (new_boss == "ArmoredXemnas1"):
+                        new_boss == "ArmoredXemnas"
                     button_key = key_list[val_list.index(new_boss)]
-                    # print(ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'))
                     self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
-                    # print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'background'))
-                    # print(ttk.Style().lookup(f"bbossfound{button_key[0]}{button_key[1]}.TButton", 'bordercolor'))
                     self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
                 except ValueError:
-                    print(f"The not yet beaten boss {new_boss} is not in the pool.")
+                    if new_boss != "Bosses Seen":
+                        print(f"The not yet beaten boss {new_boss} is not in the pool.")
     
         self.root.after(self.latency, self.autotracking)
 
@@ -727,12 +733,14 @@ class BattleshipBoard():
                         if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
                             for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
                                 self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.row_size * index_x + index_y]}')
-                                sunk_foreground = Image.open("recusant_sigil.png").resize(sunk_background.size)
-                                # FIX THE RESIZING
-                                sunk_image = ImageTk.PhotoImage(Image.alpha_composite(sunk_background, sunk_foreground).resize((40, 40)))
-                                # sunk_image.save(f'img/sigils/sigil_{self.check_names[self.row_size * index_x + index_y]}')
-                                # sunk_image = ImageTk.PhotoImage(Image.open(f'img/sigils/sigil_{self.check_names[self.row_size * index_x + index_y]}'))
+                                sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
+                                sunk_foreground = Image.open("img/recusant_sigil.png").resize(sunk_background.size)
+                                new_width = int(self.root.winfo_width() / (self.col_size*1.4))
+                                new_height = int(self.root.winfo_height() / (self.row_size*1.4))
+                                square_dim = min(new_width, new_height)
+                                self.raw_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background, sunk_foreground).resize((square_dim, square_dim))
+                                sunk_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
+                                self.image_dict[(index_x, index_y)] = sunk_image
                                 self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bclicked{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
                                                                                     self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
                                 self.button_dict[(index_x, index_y)].image = sunk_image
@@ -810,7 +818,7 @@ class BattleshipBoard():
                 if blind:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
                 else:
-                    self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*row_size + col_index], style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
+                    self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*col_size + col_index], style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky=N+S+E+W)
 
 
@@ -1025,6 +1033,7 @@ class BattleshipBoard():
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+                settings_file.write(f"self.bingo = {self.bingo}")
         else:
             with open("settings.txt", "w") as settings_file:
                 if hasattr(self, 'selected_checks'):
@@ -1036,6 +1045,7 @@ class BattleshipBoard():
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
+                settings_file.write(f"self.bingo = {self.bingo}")
         
         subprocess.Popen(r'explorer /open,"."')
     
@@ -1159,7 +1169,7 @@ class BattleshipBoard():
             ship_locations = [[xs[j], ys[j]] for j in range(len(xs))]
             check_types_on_ships = {}
             for x, y in ship_locations:
-                current_label = self.labels[x * self.row_size + y]
+                current_label = self.labels[x * self.col_size + y]
                 if current_label not in check_types_on_ships.keys():
                     check_types_on_ships[current_label] = 1
                 else:
@@ -1200,7 +1210,6 @@ def make_replacements_dict():
         spoiler_file.close()
         blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx")]
         if "Luxord became Luxord (Data)" in replacements:
-            print("IN HERE")
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
             k, v = replacement
