@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['rando_battleship.py'],
-             pathex=['C:\\Users\\roman\\Documents\\Miscellaneous\\SillyProjects\\rando_battleship_board'],
+             pathex=['c:\\Users\\roman\\Documents\\Miscellaneous\\SillyProjects\\rando_battleship_board'],
              binaries=[],
              datas=[],
              hiddenimports=[],

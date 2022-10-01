@@ -17,13 +17,14 @@ import ast
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 class BattleshipBoard():
 
     def __init__(self, row_size=11, col_size=11):
 
         # tracker settings
+        self.scaling_factor = 1.37
         self.color_types = 6
 
         # attribute setting
@@ -460,6 +461,36 @@ class BattleshipBoard():
                         # in boss enemy we don't want to track Future Pete
                         if new_check == "Pete":
                             continue
+                        # if a report is found and is a hint for bunter, change the tracker
+                        try:
+                            if new_check in self.hints.keys():
+                                orig_boss, replacement_boss = self.hints[new_check].split("became")
+                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+                                replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+                                hint_button_key = key_list[val_list.index(replacement_boss)]
+                                orig_boss_button_key = key_list[val_list.index(orig_boss)]
+                                new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+                                new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
+                                main_boss_photo = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * hint_button_key[0] + hint_button_key[1]]}').resize((new_width, new_height))
+                                background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
+                                paste_x = paste_y = main_boss_photo.size[0]//3
+                                main_boss_photo = main_boss_photo.resize((paste_x * 2, paste_y * 2)) # this line has error
+                                arena_boss_photo = Image.open(f"img/{self.icons}/{self.check_names[self.col_size * orig_boss_button_key[0] + orig_boss_button_key[1]]}").convert('RGBA')
+                                arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
+                                square_dim = min(new_width, new_height)
+                                index_x, index_y = hint_button_key[0], hint_button_key[1]
+                                hinted_border_color = "white"
+                                border = (3, 3, 3, 3)
+                                background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
+                                arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                                background.paste(arena_boss_photo, (paste_x * 9 // 5, paste_y * 9 // 5), mask = arena_boss_photo)
+                                self.raw_images[index_x*self.col_size + index_y] = background.resize((square_dim, square_dim))
+                                hinted_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
+                                self.image_dict[(index_x, index_y)] = hinted_image
+                                self.button_dict[(index_x, index_y)].configure(image = hinted_image)
+                                self.button_dict[(index_x, index_y)].image = hinted_image
+                        except:
+                            pass
                         # try to get the randomized boss instead of the vanilla boss
                         try:
                             new_check = self.replacements[new_check]
@@ -525,7 +556,7 @@ class BattleshipBoard():
                             pass
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_boss == "ArmoredXemnas"):
-                        if self.armored_xemnas_seen:
+                        if self.armored_xemnas_seen or self.armored_xemnas_found:
                             continue
                         else:
                             self.armored_xemnas_seen = True
@@ -550,8 +581,8 @@ class BattleshipBoard():
 
 
     def resize_image(self, event):
-        new_width = int(self.root.winfo_width() / (self.col_size*1.4))
-        new_height = int(self.root.winfo_height() / (self.row_size*1.4))
+        new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+        new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
         square_dim = min(new_width, new_height)
         self.image_dict = {}
         for row_index in range(self.row_size):
@@ -561,6 +592,8 @@ class BattleshipBoard():
 
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
+        if hasattr(self, 'autotracking_process'):
+            self.autotracking_process.kill()
         self.checks_found = np.zeros((row_size, col_size))
         self.root.geometry(f"{64*col_size}x{64*row_size}")
         Grid.rowconfigure(self.root, 0, weight=1)
@@ -735,8 +768,8 @@ class BattleshipBoard():
                                 self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
                                 sunk_foreground = Image.open("img/recusant_sigil.png").resize(sunk_background.size)
-                                new_width = int(self.root.winfo_width() / (self.col_size*1.4))
-                                new_height = int(self.root.winfo_height() / (self.row_size*1.4))
+                                new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+                                new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
                                 square_dim = min(new_width, new_height)
                                 self.raw_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background, sunk_foreground).resize((square_dim, square_dim))
                                 sunk_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
@@ -1061,11 +1094,20 @@ class BattleshipBoard():
 
     
     def load_bunter_seed(self):
-        # need to find a way where players can keep enemyspoilers.txt in casual modes
+        
 
         # remove enemyspoilers before next load AT ALL COSTS
         try:
             filename = fd.askopenfilename()
+
+            # get bunter hints if possible
+            subprocess.call([os.path.join('autotracker', 'BunterHints', 'BunterHints.exe'), f'{filename}'], shell=True)
+            with open("hints.txt", "r") as hints_file:
+                self.hints = ast.literal_eval(hints_file.read())
+            print(self.hints)
+            self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
+            print(self.hints)
+            os.remove('hints.txt')
 
             os.mkdir('enemyspoilers')
             shutil.unpack_archive(filename, './enemyspoilers', 'zip')
@@ -1208,7 +1250,7 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
-        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx")]
+        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn")]
         if "Luxord became Luxord (Data)" in replacements:
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
@@ -1218,7 +1260,6 @@ def make_replacements_dict():
                     return ("ERROR", replacements_dict)
             except KeyError:
                 pass
-
 
     return replacements_dict
 

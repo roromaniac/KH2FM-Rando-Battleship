@@ -8,11 +8,13 @@ def inject_checks(starting_buffer=10,interval=10):
 
     if os.path.exists('seenbosses.txt'):
         os.remove("seenbosses.txt")
+    if os.path.exists('checks.txt'):
+        os.remove("checks.txt")
 
     time.sleep(starting_buffer)
 
-    checks = ['Xigbar', 'Sephiroth', 'Cerberus', 'Sark', 'Luxord', 'PrisonKeeper', 'GrimReaper1', 'GrimReaper2', 'Larxene', 'Pete', 'Axel1', 'Axel2', 'Scar', 'Thresholder', 'Hades', 'Barbossa', 'Beast', 'DarkThorn', 'Experiment', 'Lexaeus', 'OldPete', 'BlizzardLord', 'ArmoredXemnas', 'VolcanoLord', 'ShanYu', 'Demyx', 'Zexion', 'Marluxia', 'Vexen', 'TwilightThorn']
-    checks_found = ['Sark', 'Xigbar', 'Luxord', 'Saix', 'Xaldin', 'PrisonKeeper', 'GrimReaper1', 'GrimReaper2', 'Larxene', 'Pete', 'Axel1', 'Axel2', 'Scar', 'Thresholder', 'Hades', 'HostileProgram', 'Roxas', 'DarkThorn', 'Experiment', 'Lexaeus', 'OldPete', 'BlizzardLord', 'ArmoredXemnas', 'VolcanoLord', 'ShanYu', 'Demyx', 'Zexion', 'Marluxia', 'Vexen', 'TwilightThorn']
+    checks = ['Report1', 'Report2', 'Report3', 'Report4', 'Report5', 'Report6', 'Report7', 'Report8', 'Report9', 'Report10', 'Report11', 'Report12', 'Report13', 'Sark']
+    checks_found = ['Report1', 'Report2', 'Report3', 'Report4', 'Report5', 'Report6', 'Report7', 'Report8', 'Report9', 'Report10', 'Report11', 'Report12', 'Report13', 'Sark']
 
     while len(checks) != 0:
 
