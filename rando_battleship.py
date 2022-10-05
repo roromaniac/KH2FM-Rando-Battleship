@@ -2,6 +2,7 @@ from sys import stdout
 from tkinter import *
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
+from typing import Tuple
 from PIL import ImageTk, Image
 import random
 import os
@@ -17,7 +18,7 @@ import ast
 from tkinter import filedialog as fd
 from tkinter import simpledialog
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw
 
 class BattleshipBoard():
 
@@ -64,6 +65,7 @@ class BattleshipBoard():
 
         # reset the autotracker
         self.bingo = False
+        self.armored_xemnas_hinted = False
         self.armored_xemnas_found = False
         self.armored_xemnas_seen = False
         self.important_checks_recorded = []
@@ -93,7 +95,7 @@ class BattleshipBoard():
         self.root.bind_all("<Control-d>", self.download_ship_layout)
         self.root.bind_all("<Control-h>", self.open_help_window)
 
-        # Create Marking Color (should be saved in tracker_settings)
+        # Load in Current Tracker Settings
         with open("tracker_settings.txt", "r") as settings_file:
             settings = settings_file.readlines()
             for line in settings:
@@ -140,6 +142,7 @@ class BattleshipBoard():
         customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
         customize.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
         customize.add_command(label = 'Change Icon Style', command=self.set_icon_style)
+        customize.add_checkbutton(label = 'Hint Filled', onvalue=1, offvalue=0, command=self.set_fill)
         menubar.add_cascade(label = 'Customize', menu=customize)
 
 
@@ -155,9 +158,21 @@ class BattleshipBoard():
         menubar.add_cascade(label = 'Info', menu=self.info)
 
         self.root.config(menu=menubar)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
+
+
+    def set_fill(self):
+        self.fill = not self.fill
+        self.update_tracker_settings(self.fill)
+
+
+    def on_closing(self):
+        self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
+        self.update_tracker_settings((self.x, self.y), position=True)
+        self.root.destroy()
 
 
     def set_icon_style(self):
@@ -179,15 +194,54 @@ class BattleshipBoard():
         self.seedname = new_seedname
 
 
-    def update_tracker_settings(self, new_data):
-        if type(new_data) == str:
+    # for refactoring rewrite this into fewer lines
+    def update_tracker_settings(self, new_data, position=False):
+        if type(new_data) == bool:
+            with open("tracker_settings.txt", "w") as f:
+                f.write(f"self.icons = '{self.icons}'\n")
+                f.write(f"self.marking_colors = {self.marking_colors}\n")
+                f.write(f"self.width = {self.width}\n")
+                f.write(f"self.height = {self.height}\n")
+                f.write(f"self.x = {self.x}\n")
+                f.write(f"self.y = {self.y}\n")
+                f.write(f"self.fill = {new_data}")
+        elif type(new_data) == str:
             with open("tracker_settings.txt", "w") as f:
                 f.write(f"self.icons = '{new_data}'\n")
-                f.write(f"self.marking_colors = {self.marking_colors}")
+                f.write(f"self.marking_colors = {self.marking_colors}\n")
+                f.write(f"self.width = {self.width}\n")
+                f.write(f"self.height = {self.height}\n")
+                f.write(f"self.x = {self.x}\n")
+                f.write(f"self.y = {self.y}\n")
+                f.write(f"self.fill = {self.fill}")
         elif type(new_data) == dict:
             with open("tracker_settings.txt", "w") as f:
                 f.write(f"self.icons = '{self.icons}'\n")
-                f.write(f"self.marking_colors = {new_data}")
+                f.write(f"self.marking_colors = {new_data}\n")
+                f.write(f"self.width = {self.width}\n")
+                f.write(f"self.height = {self.height}\n")
+                f.write(f"self.x = {self.x}\n")
+                f.write(f"self.y = {self.y}\n")
+                f.write(f"self.fill = {self.fill}")
+        elif type(new_data) == tuple and all([type(x) == int for x in new_data]):
+            if position:
+                with open("tracker_settings.txt", "w") as f:
+                    f.write(f"self.icons = '{self.icons}'\n")
+                    f.write(f"self.marking_colors = {self.marking_colors}\n")
+                    f.write(f"self.width = {self.width}\n")
+                    f.write(f"self.height = {self.height}\n")
+                    f.write(f"self.x = {new_data[0]}\n")
+                    f.write(f"self.y = {new_data[1]}\n")
+                    f.write(f"self.fill = {self.fill}")
+            else:
+                with open("tracker_settings.txt", "w") as f:
+                    f.write(f"self.icons = '{self.icons}'\n")
+                    f.write(f"self.marking_colors = {self.marking_colors}\n")
+                    f.write(f"self.width = {new_data[0]}\n")
+                    f.write(f"self.height = {new_data[1]}\n")
+                    f.write(f"self.x = {self.x}\n")
+                    f.write(f"self.y = {self.y}\n")
+                    f.write(f"self.fill = {self.fill}")
 
 
     def change_marking_colors(self, color_list = ["white"]):
@@ -255,8 +309,18 @@ class BattleshipBoard():
     def set_latency(self):
         try:
             self.latency = float(simpledialog.askstring(title="Latency Timer", prompt="Set Latency to: ", initialvalue=1.5))
-        except TypeError:
-            print("Make sure latency is an actual number.")
+        except TypeError or ValueError:
+            window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
+            popup = Tk()
+            popup.wm_title("ERROR!")
+            popup.geometry("281x70")
+            self.root.update_idletasks()
+            popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+            popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+            label = ttk.Label(popup, text='ERROR: Please set your latency to a numerical value.')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
 
 
     def place_ship(self, x, y, event=None):
@@ -464,27 +528,52 @@ class BattleshipBoard():
                         # if a report is found and is a hint for bunter, change the tracker
                         try:
                             if new_check in self.hints.keys():
-                                orig_boss, replacement_boss = self.hints[new_check].split("became")
-                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
-                                replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
+                                if "unchanged" in self.hints[new_check]:
+                                    orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
+                                else:
+                                    orig_boss, replacement_boss = self.hints[new_check].split("became")
+                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
+                                replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
                                 orig_boss_button_key = key_list[val_list.index(orig_boss)]
                                 new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
                                 new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                main_boss_photo = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * hint_button_key[0] + hint_button_key[1]]}').resize((new_width, new_height))
+                                main_boss_photo = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * hint_button_key[0] + hint_button_key[1]]}').resize((new_width, new_height)).convert('RGBA')
                                 background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
-                                paste_x = paste_y = main_boss_photo.size[0]//3
-                                main_boss_photo = main_boss_photo.resize((paste_x * 2, paste_y * 2)) # this line has error
+                                paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
+                                # resize the original image if you want
+                                # main_boss_photo = main_boss_photo.resize((paste_x * 2, paste_y * 2))
                                 arena_boss_photo = Image.open(f"img/{self.icons}/{self.check_names[self.col_size * orig_boss_button_key[0] + orig_boss_button_key[1]]}").convert('RGBA')
                                 arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
-                                square_dim = min(new_width, new_height)
+                                arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
+                                arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
                                 index_x, index_y = hint_button_key[0], hint_button_key[1]
                                 hinted_border_color = "white"
-                                border = (3, 3, 3, 3)
+                                border = (max(1, self.root.winfo_width()//250), max(1, self.root.winfo_width()//250), max(1, self.root.winfo_width()//250), self.root.winfo_width()//250)
                                 background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
-                                arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
-                                background.paste(arena_boss_photo, (paste_x * 9 // 5, paste_y * 9 // 5), mask = arena_boss_photo)
-                                self.raw_images[index_x*self.col_size + index_y] = background.resize((square_dim, square_dim))
+                                if self.fill:
+                                    arena_white_background = ImageOps.expand(arena_white_background, border=border, fill=hinted_border_color)
+                                else:
+                                    # white background won't actually exist here
+                                    arena_white_background = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                                if replacement_boss == "ArmoredXemnas":
+                                    if self.armored_xemnas_hinted:
+                                        background.paste(arena_white_background, (0, 0), mask = arena_white_background)
+                                        background.save('temp.png')
+                                        old_arena_boss_photo = Image.open(f"img/{self.icons}/{self.first_boss_hint}.webp").convert('RGBA')
+                                        old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
+                                        old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
+                                        old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
+                                        background = Image.open('temp.png')
+                                        background.paste(old_arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = old_arena_white_background)
+                                        # os.remove('temp.png')
+                                    else:
+                                        self.armored_xemnas_hinted = True
+                                        self.first_boss_hint = orig_boss
+                                        background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
+                                else:
+                                    background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
+                                self.raw_images[index_x*self.col_size + index_y] = background.resize((new_width, new_height))
                                 hinted_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
                                 self.image_dict[(index_x, index_y)] = hinted_image
                                 self.button_dict[(index_x, index_y)].configure(image = hinted_image)
@@ -583,11 +672,13 @@ class BattleshipBoard():
     def resize_image(self, event):
         new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
         new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
+        self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
+        self.update_tracker_settings((self.root.winfo_width(), self.root.winfo_height()))
         square_dim = min(new_width, new_height)
         self.image_dict = {}
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
-                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.raw_images[row_index*self.col_size + col_index].resize((square_dim, square_dim)))
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(Image.open(f"img/{self.icons}/{self.check_names[row_index*self.row_size + col_index]}").resize((square_dim, square_dim)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
 
 
@@ -595,7 +686,8 @@ class BattleshipBoard():
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
         self.checks_found = np.zeros((row_size, col_size))
-        self.root.geometry(f"{64*col_size}x{64*row_size}")
+        self.root.geometry(f"{self.width}x{self.height}")
+        self.root.geometry(f"+{self.x}+{self.y}")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         # self.root.rowconfigure(0, weight=1)
@@ -642,12 +734,12 @@ class BattleshipBoard():
             if (row_size != col_size):
                 window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
                 popup = Tk()
-                popup.wm_title("Warning!")
-                popup.geometry("380x80")
+                popup.wm_title("WARNING!")
+                popup.geometry("347x70")
                 # self.root.update_idletasks()
                 popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
                 popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
-                label = ttk.Label(popup, text='ERROR: Bingo board must be square.')
+                label = ttk.Label(popup, text='Warning: Bingo board must be square. Bingo logic will not work.')
                 label.pack(side="top", fill="x", pady=10)
                 B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
                 B1.pack()
@@ -857,7 +949,6 @@ class BattleshipBoard():
 
     def set_ship_sizes(self, entries, window):
         self.ship_sizes = list(it.chain(*[[i] * int(entries[i].get()) if entries[i].get() != "" else [] for i in range(1, max(self.row_size, self.col_size) + 1)]))
-        print(self.ship_sizes)
         window.destroy()
 
 
@@ -1104,9 +1195,7 @@ class BattleshipBoard():
             subprocess.call([os.path.join('autotracker', 'BunterHints', 'BunterHints.exe'), f'{filename}'], shell=True)
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
-            print(self.hints)
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
-            print(self.hints)
             os.remove('hints.txt')
 
             os.mkdir('enemyspoilers')

@@ -44,24 +44,6 @@ Welcome to KH2FM Rando Battleship! Here are the instructions to get started.
 6. (Everyone) Go to "Actions" -> "Load Boss Enemy Seed" and select the zip seed of the boss enemy seed you created.
 7. (Everyone) Start the autotracking by going to "Actions" -> "Start Autotracking". The autotracking will track the replaced bosses!
 
-# Features in Development (and their expected release dates).
-1. <ins>Interact w/ File Client to Upload Seed AND CHECK THAT THERE ARE HITS</ins> :white_check_mark: Included in v0.9.1.
-2. <ins>Sunk Logic</ins>: Logic that changes the color of ship buttons once the whole ship is sunk. :white_check_mark: Included in v1.0.0.
-3. <ins>Clear Board</ins>: Clear the board during placement mode. :white_check_mark: Included in v1.0.0.
-4. <ins>Shared Board Mode</ins>: Generate a card with pre-placed ships to send to your opponent. You and your opponent can compete to clear the same board. :white_check_mark: Included in v1.0.0.
-5. <ins>Custom Board Dimension</ins>: Customize the size of the battleship grid. :white_check_mark: Included in v1.0.0.
-6. <ins>Assign hotkeys to certain actions so you don't have to go through the menus.</ins> :white_check_mark: Included in v1.0.1.
-7. <ins>Toggle Checks for Inclusion</ins>: Toggle checks to be allowed in the pool of checks for battleship. :white_check_mark: Included in v1.1.0.
-8. <ins>Ship Validation</ins>: Validate that ships of the appropriate sizes were placed. :white_check_mark: Included in v1.1.0.
-9. <ins>Restrictions</ins>: Validate restrictions on ships (such as number of allowable bosses, level 4 movements, etc.). :white_check_mark: Included in v1.1.0.
-10. <ins>Load Settings Automatically</ins>: Allow for board with the same restrictions/toggles/randomization etc. to be immediately loaded (as opposed to each player recreating the same board). :white_check_mark: Included in v1.1.1.
-11. <ins>Presets</ins>: :white_check_mark: Included in v1.1.2.
-12. <ins>Image and Window Quality</ins>: Make errors popout windows and improve image/window size quality with changing grid size. ETA: 2-3 weeks (from 7/24/22). Partially included in v1.0.1.
-13. <ins>Autotracking</ins>: The ability for the button to be pressed once the check is found in KH2. :white_check_mark: Included in v1.2.0.
-14. <ins>Boss Enemy Autotracking</ins>: Track the new boss instead of the replaced one in boss enemy seeds. :white_check_mark: Included in v1.3.0.
-14. <ins>Markdown Assistance</ins>: The ability to right click to help you mark what might be important (or not important). ETA: 1-2 months (from 7/15/22)
-15. <ins>Include icons with Xs to indicate sunken checks.</ins> ETA: ? Whenever someone wants to develop those icons.
-
 # Autotracking
 
 All bosses and checks are autotracked. Only 1 exception exists.
@@ -97,3 +79,5 @@ All bosses and checks are autotracked. Only 1 exception exists.
 * MegaSlim
 * Ragna
 * Dragonblast
+* CoreySG9
+
