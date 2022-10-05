@@ -97,3 +97,4 @@ All bosses and checks are autotracked. Only 1 exception exists.
 * MegaSlim
 * Ragna
 * Dragonblast
+* CoreySG9
