@@ -4,4 +4,4 @@ self.width = 947
 self.height = 955
 self.x = -2104
 self.y = -54
-self.fill = False
+self.fill = True

@@ -142,7 +142,8 @@ class BattleshipBoard():
         customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
         customize.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
         customize.add_command(label = 'Change Icon Style', command=self.set_icon_style)
-        customize.add_checkbutton(label = 'Hint Filled', onvalue=1, offvalue=0, command=self.set_fill)
+        fill_checked = IntVar(value = self.fill)
+        customize.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
         menubar.add_cascade(label = 'Customize', menu=customize)
 
 
