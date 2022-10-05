@@ -1,2 +1,7 @@
-self.icons = 'televo'
-self.marking_colors = {'Marking Color': 'green', 'Annotating Color': '#FFAC1C', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': 'purple'}
+self.icons = 'sonic'
+self.marking_colors = {'Marking Color': 'green', 'Annotating Color': '#FFAC1C', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': '#00ff00'}
+self.width = 947
+self.height = 955
+self.x = -2104
+self.y = -54
+self.fill = True

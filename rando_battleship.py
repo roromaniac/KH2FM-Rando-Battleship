@@ -1210,6 +1210,7 @@ class BattleshipBoard():
             window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
             if type(self.replacements) == tuple:
+                self.replacements = self.replacements[1]
                 popup.wm_title("WARNING!")
                 popup.geometry("380x80")
                 self.root.update_idletasks()
