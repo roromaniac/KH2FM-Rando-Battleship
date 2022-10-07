@@ -217,6 +217,7 @@ imports:
  &#8226;   <a href="#codecs">codecs</a>
  &#8226;   <a href="#collections">collections</a>
  &#8226;   <a href="#collections.abc">collections.abc</a>
+ &#8226;   <a href="#copy">copy</a>
  &#8226;   <a href="#copyreg">copyreg</a>
  &#8226;   <a href="#encodings">encodings</a>
  &#8226;   <a href="#encodings.aliases">encodings.aliases</a>
@@ -371,7 +372,6 @@ imports:
  &#8226;   <a href="#sre_parse">sre_parse</a>
  &#8226;   <a href="#string">string</a>
  &#8226;   <a href="#subprocess">subprocess</a>
- &#8226;   <a href="#sys">sys</a>
  &#8226;   <a href="#tkinter">tkinter</a>
  &#8226;   <a href="#tkinter.colorchooser">tkinter.colorchooser</a>
  &#8226;   <a href="#tkinter.filedialog">tkinter.filedialog</a>
@@ -379,7 +379,6 @@ imports:
  &#8226;   <a href="#tkinter.ttk">tkinter.ttk</a>
  &#8226;   <a href="#traceback">traceback</a>
  &#8226;   <a href="#types">types</a>
- &#8226;   <a href="#typing">typing</a>
  &#8226;   <a href="#warnings">warnings</a>
  &#8226;   <a href="#weakref">weakref</a>
  &#8226;   <a href="#webbrowser">webbrowser</a>
@@ -4211,7 +4210,6 @@ imported by:
 imports:
     <a href="#PIL">PIL</a>
  &#8226;   <a href="#PIL.BmpImagePlugin">PIL.BmpImagePlugin</a>
- &#8226;   <a href="#PIL.FitsImagePlugin">PIL.FitsImagePlugin</a>
  &#8226;   <a href="#PIL.GifImagePlugin">PIL.GifImagePlugin</a>
  &#8226;   <a href="#PIL.GimpGradientFile">PIL.GimpGradientFile</a>
  &#8226;   <a href="#PIL.GimpPaletteFile">PIL.GimpPaletteFile</a>
@@ -4231,6 +4229,7 @@ imports:
  &#8226;   <a href="#PIL.ImageSequence">PIL.ImageSequence</a>
  &#8226;   <a href="#PIL.ImageShow">PIL.ImageShow</a>
  &#8226;   <a href="#PIL.ImageTk">PIL.ImageTk</a>
+ &#8226;   <a href="#PIL.Jpeg2KImagePlugin">PIL.Jpeg2KImagePlugin</a>
  &#8226;   <a href="#PIL.JpegImagePlugin">PIL.JpegImagePlugin</a>
  &#8226;   <a href="#PIL.PaletteFile">PIL.PaletteFile</a>
  &#8226;   <a href="#PIL.PdfParser">PIL.PdfParser</a>
@@ -4501,8 +4500,7 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#PIL">PIL</a>
- &#8226;   <a href="#PIL.FitsStubImagePlugin">PIL.FitsStubImagePlugin</a>
+    <a href="#PIL.FitsStubImagePlugin">PIL.FitsStubImagePlugin</a>
  &#8226;   <a href="#PIL.Image">PIL.Image</a>
 
   </div>
@@ -5384,7 +5382,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#PIL.IcnsImagePlugin">PIL.IcnsImagePlugin</a>
+    <a href="#PIL">PIL</a>
+ &#8226;   <a href="#PIL.IcnsImagePlugin">PIL.IcnsImagePlugin</a>
  &#8226;   <a href="#PIL.Image">PIL.Image</a>
 
   </div>
@@ -11594,6 +11593,7 @@ imported by:
  &#8226;   <a href="#pycparser.ply.lex">pycparser.ply.lex</a>
  &#8226;   <a href="#pygments.lexers.css">pygments.lexers.css</a>
  &#8226;   <a href="#pyparsing.core">pyparsing.core</a>
+ &#8226;   <a href="#rando_battleship.py">rando_battleship.py</a>
  &#8226;   <a href="#requests.cookies">requests.cookies</a>
  &#8226;   <a href="#setuptools._vendor.pyparsing">setuptools._vendor.pyparsing</a>
  &#8226;   <a href="#smtplib">smtplib</a>
@@ -22063,6 +22063,8 @@ imports:
  &#8226;   <a href="#ipykernel">ipykernel</a>
  &#8226;   <a href="#ipykernel.serialize">ipykernel.serialize</a>
  &#8226;   <a href="#numpy">numpy</a>
+ &#8226;   <a href="#numpy.ascontiguousarray">numpy.ascontiguousarray</a>
+ &#8226;   <a href="#numpy.frombuffer">numpy.frombuffer</a>
  &#8226;   <a href="#pickle">pickle</a>
  &#8226;   <a href="#sys">sys</a>
  &#8226;   <a href="#traitlets.log">traitlets.log</a>
@@ -29479,6 +29481,7 @@ imports:
  &#8226;   <a href="#numpy.amin">numpy.amin</a>
  &#8226;   <a href="#numpy.array">numpy.array</a>
  &#8226;   <a href="#numpy.array_api">numpy.array_api</a>
+ &#8226;   <a href="#numpy.ascontiguousarray">numpy.ascontiguousarray</a>
  &#8226;   <a href="#numpy.bool_">numpy.bool_</a>
  &#8226;   <a href="#numpy.bytes_">numpy.bytes_</a>
  &#8226;   <a href="#numpy.compat">numpy.compat</a>
@@ -29494,6 +29497,7 @@ imports:
  &#8226;   <a href="#numpy.float32">numpy.float32</a>
  &#8226;   <a href="#numpy.float64">numpy.float64</a>
  &#8226;   <a href="#numpy.floating">numpy.floating</a>
+ &#8226;   <a href="#numpy.frombuffer">numpy.frombuffer</a>
  &#8226;   <a href="#numpy.generic">numpy.generic</a>
  &#8226;   <a href="#numpy.histogramdd">numpy.histogramdd</a>
  &#8226;   <a href="#numpy.int16">numpy.int16</a>
@@ -30141,6 +30145,18 @@ imports:
 imported by:
     <a href="#numpy.array_api">numpy.array_api</a>
  &#8226;   <a href="#numpy.array_api._array_object">numpy.array_api._array_object</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="numpy.ascontiguousarray"></a>
+  <a target="code" href="" type="text/plain"><tt>numpy.ascontiguousarray</tt></a>
+<span class="moduletype">MissingModule</span>  <div class="import">
+imported by:
+    <a href="#ipykernel.pickleutil">ipykernel.pickleutil</a>
+ &#8226;   <a href="#numpy">numpy</a>
 
   </div>
 
@@ -31971,6 +31987,7 @@ imports:
  &#8226;   <a href="#numpy.core._internal">numpy.core._internal</a>
  &#8226;   <a href="#numpy.core.multiarray">numpy.core.multiarray</a>
  &#8226;   <a href="#numpy.dtype">numpy.dtype</a>
+ &#8226;   <a href="#numpy.frombuffer">numpy.frombuffer</a>
  &#8226;   <a href="#numpy.integer">numpy.integer</a>
  &#8226;   <a href="#numpy.ndarray">numpy.ndarray</a>
  &#8226;   <a href="#os">os</a>
@@ -32156,6 +32173,19 @@ imported by:
 imported by:
     <a href="#numpy">numpy</a>
  &#8226;   <a href="#numpy.typing._array_like">numpy.typing._array_like</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="numpy.frombuffer"></a>
+  <a target="code" href="" type="text/plain"><tt>numpy.frombuffer</tt></a>
+<span class="moduletype">MissingModule</span>  <div class="import">
+imported by:
+    <a href="#ipykernel.pickleutil">ipykernel.pickleutil</a>
+ &#8226;   <a href="#numpy">numpy</a>
+ &#8226;   <a href="#numpy.ctypeslib">numpy.ctypeslib</a>
 
   </div>
 
@@ -34866,7 +34896,6 @@ imports:
     <a href="#packaging">packaging</a>
  &#8226;   <a href="#packaging.__about__">packaging.__about__</a>
  &#8226;   <a href="#packaging._manylinux">packaging._manylinux</a>
- &#8226;   <a href="#packaging._musllinux">packaging._musllinux</a>
  &#8226;   <a href="#pkg_resources">pkg_resources</a>
 
   </div>
@@ -34954,8 +34983,7 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#packaging">packaging</a>
- &#8226;   <a href="#packaging.tags">packaging.tags</a>
+    <a href="#packaging.tags">packaging.tags</a>
  &#8226;   <a href="#pkg_resources">pkg_resources</a>
 
   </div>
@@ -42352,11 +42380,9 @@ imports:
  &#8226;   <a href="#pygments.lexers.PrologLexer">pygments.lexers.PrologLexer</a>
  &#8226;   <a href="#pygments.lexers.PythonLexer">pygments.lexers.PythonLexer</a>
  &#8226;   <a href="#pygments.lexers._mapping">pygments.lexers._mapping</a>
- &#8226;   <a href="#pygments.lexers._mql_builtins">pygments.lexers._mql_builtins</a>
  &#8226;   <a href="#pygments.lexers._scilab_builtins">pygments.lexers._scilab_builtins</a>
  &#8226;   <a href="#pygments.lexers._stan_builtins">pygments.lexers._stan_builtins</a>
  &#8226;   <a href="#pygments.lexers._tsql_builtins">pygments.lexers._tsql_builtins</a>
- &#8226;   <a href="#pygments.lexers._vbscript_builtins">pygments.lexers._vbscript_builtins</a>
  &#8226;   <a href="#pygments.modeline">pygments.modeline</a>
  &#8226;   <a href="#pygments.plugin">pygments.plugin</a>
  &#8226;   <a href="#pygments.util">pygments.util</a>
@@ -42819,7 +42845,6 @@ imports:
   <div class="import">
 imported by:
     <a href="#pygments">pygments</a>
- &#8226;   <a href="#pygments.lexers">pygments.lexers</a>
  &#8226;   <a href="#pygments.lexers.c_like">pygments.lexers.c_like</a>
  &#8226;   <a href="#pygments.lexers.freefem">pygments.lexers.freefem</a>
 
@@ -43064,7 +43089,6 @@ imports:
   <div class="import">
 imported by:
     <a href="#pygments">pygments</a>
- &#8226;   <a href="#pygments.lexers">pygments.lexers</a>
  &#8226;   <a href="#pygments.lexers.basic">pygments.lexers.basic</a>
 
   </div>
@@ -53224,7 +53248,6 @@ imported by:
  &#8226;   <a href="#pywin.mfc.object">pywin.mfc.object</a>
  &#8226;   <a href="#pywintypes">pywintypes</a>
  &#8226;   <a href="#quopri">quopri</a>
- &#8226;   <a href="#rando_battleship.py">rando_battleship.py</a>
  &#8226;   <a href="#requests.compat">requests.compat</a>
  &#8226;   <a href="#requests.models">requests.models</a>
  &#8226;   <a href="#requests.packages">requests.packages</a>
@@ -55589,7 +55612,6 @@ imported by:
  &#8226;   <a href="#pyparsing.testing">pyparsing.testing</a>
  &#8226;   <a href="#pyparsing.unicode">pyparsing.unicode</a>
  &#8226;   <a href="#pyparsing.util">pyparsing.util</a>
- &#8226;   <a href="#rando_battleship.py">rando_battleship.py</a>
  &#8226;   <a href="#shiboken6">shiboken6</a>
  &#8226;   <a href="#stack_data.core">stack_data.core</a>
  &#8226;   <a href="#stack_data.formatting">stack_data.formatting</a>

@@ -1,9 +1,3 @@
-from sys import stdout
-from tkinter import *
-from tkinter import ttk
-from tkinter.colorchooser import askcolor
-from typing import Tuple
-from PIL import ImageTk, Image
 import random
 import os
 import numpy as np
@@ -14,6 +8,13 @@ import webbrowser
 import json
 import itertools as it
 import ast
+
+from tkinter import *
+from tkinter import ttk
+from tkinter.colorchooser import askcolor
+from PIL import ImageTk, Image
+from copy import deepcopy
+
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
@@ -128,6 +129,7 @@ class BattleshipBoard():
         actions.add_command(label = 'Save Ship Layout', command=self.download_ship_layout, accelerator="Ctrl+D")
         actions.add_command(label = 'Save Board Settings', command=self.save_settings)
         actions.add_command(label = 'Load Board Settings', command=self.load_settings)
+        actions.add_command(label = 'Load Preset', command=lambda: self.load_settings(True))
         actions.add_command(label = 'Save Settings as New Preset', command=lambda: self.save_settings(True))
         actions.add_command(label = 'Start Autotracking', command=self.autotracking_timer)
         actions.add_command(label = 'Load Boss Enemy Seed', command=self.load_bunter_seed)
@@ -268,11 +270,13 @@ class BattleshipBoard():
         modes = ["Marking Color", "Annotating Color", "Battleship Miss", "Battleship Hit", "Battleship Sink", "Bingo (Bunter)"]
 
         def change_color(i, modes = modes, color_list=color_list):
-            colors = askcolor(title="Tkinter Color Chooser")
-            self.marking_colors[modes[i - 1]] = colors[1]
-            self.update_tracker_settings(self.marking_colors)
+            colors = askcolor(title="Tkinter Color Chooser", initialcolor=self.marking_colors[modes[i - 1]])
+            # only change the color if the OK button is clicked
+            if colors[1] is not None:
+                color_list[i - 1] = colors[1]
+                self.marking_colors[modes[i - 1]] = colors[1]
+                self.update_tracker_settings(self.marking_colors)
             # write the color dict to tracker settings line 2
-            color_list[i - 1] = colors[1]
             window.destroy()
             self.change_marking_colors(color_list)
 
@@ -488,6 +492,7 @@ class BattleshipBoard():
             os.remove('ships.txt')
 
         self.opponent_ships_with_ids = self.find_ships(opponent_ships)
+        print(self.opponent_ships_with_ids)
         self.ships_left = list(range(1, int(np.max(self.opponent_ships_with_ids)) + 1))
 
         for x in range(self.row_size):
@@ -535,16 +540,16 @@ class BattleshipBoard():
                                     orig_boss, replacement_boss = self.hints[new_check].split("became")
                                 orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
                                 replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
+                                # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
-                                orig_boss_button_key = key_list[val_list.index(orig_boss)]
                                 new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
                                 new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                main_boss_photo = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * hint_button_key[0] + hint_button_key[1]]}').resize((new_width, new_height)).convert('RGBA')
+                                main_boss_photo = Image.open(f'img/{self.icons}/{replacement_boss}.webp').resize((new_width, new_height)).convert('RGBA')
                                 background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
                                 paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
                                 # resize the original image if you want
                                 # main_boss_photo = main_boss_photo.resize((paste_x * 2, paste_y * 2))
-                                arena_boss_photo = Image.open(f"img/{self.icons}/{self.check_names[self.col_size * orig_boss_button_key[0] + orig_boss_button_key[1]]}").convert('RGBA')
+                                arena_boss_photo = Image.open(f"img/{self.icons}/{orig_boss}.webp").convert('RGBA')
                                 arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
                                 arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
                                 arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
@@ -574,9 +579,8 @@ class BattleshipBoard():
                                         background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
                                 else:
                                     background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
-                                self.raw_images[index_x*self.col_size + index_y] = background.resize((new_width, new_height))
-                                hinted_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
-                                self.image_dict[(index_x, index_y)] = hinted_image
+                                self.used_images[index_x*self.col_size + index_y] = background.resize((new_width, new_height))
+                                hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                 self.button_dict[(index_x, index_y)].configure(image = hinted_image)
                                 self.button_dict[(index_x, index_y)].image = hinted_image
                         except:
@@ -675,11 +679,12 @@ class BattleshipBoard():
         new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
         self.update_tracker_settings((self.root.winfo_width(), self.root.winfo_height()))
-        square_dim = min(new_width, new_height)
+        self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
+        self.update_tracker_settings((self.x, self.y), position=True)
         self.image_dict = {}
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
-                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(Image.open(f"img/{self.icons}/{self.check_names[row_index*self.row_size + col_index]}").resize((square_dim, square_dim)))
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
 
 
@@ -701,8 +706,9 @@ class BattleshipBoard():
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
         random.Random(self.seedname).shuffle(self.check_names)
-        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((40,40)) for check in self.check_names]
-        self.images = [ImageTk.PhotoImage(raw_image) for raw_image in self.raw_images]
+        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.col_size*self.scaling_factor)))) for check in self.check_names]
+        self.used_images = deepcopy(self.raw_images)
+        self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
             self.labels = [checktypes_dict[check] for check in self.check_names]
@@ -754,6 +760,8 @@ class BattleshipBoard():
         print("------------------------------------------------")
         [print(removed_check) for removed_check in list(checks_not_included)]
         self.frame.bind("<Configure>", self.resize_image)
+        self.root.bind("<FocusIn>", self.resize_image)
+        self.root.bind("<FocusOut>", self.resize_image)
 
 
     def identify_bingos(self, dimension):
@@ -803,18 +811,18 @@ class BattleshipBoard():
                     new_color = self.marking_colors["Marking Color"]
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
-            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Miss"]:
-                if new_color == self.marking_colors["Annotating Color"]:
-                    current_color = self.marking_colors["Battleship Miss"]
-                else:
-                    new_color = self.marking_colors["Battleship Miss"]
-                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
             elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Hit"]:
                 if new_color == self.marking_colors["Annotating Color"]:
                     current_color = self.marking_colors["Battleship Hit"]
                 else:
                     new_color = self.marking_colors["Battleship Hit"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Miss"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Battleship Miss"]
+                else:
+                    new_color = self.marking_colors["Battleship Miss"]
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
             elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Sink"]:
@@ -841,37 +849,115 @@ class BattleshipBoard():
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
             if not placing_ship:
-                self.checks_found[row_index, col_index] = 1
-                # check if a bingo has been achieved
-                if self.bingo and self.row_size == self.col_size:
-                    for possible_bingo in self.possible_bingos:
-                        if np.sum(possible_bingo * self.checks_found) == self.row_size:
-                            xs, ys = np.where(possible_bingo == 1)
-                            for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                                self.set_style(f"bbingo{index_x}{index_y}.TButton", background=self.marking_colors["Bingo (Bunter)"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.button_dict[(index_x, index_y)].configure(style=f"bbingo{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
-                                                                                    self.change_button_color(self.marking_colors["Bingo (Bunter)"], self.marking_colors["Bingo (Bunter)"], row_index, col_index, current_border_color, placing_ship))
-                
-                # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
-                elif hasattr(self, 'ships_left'):
-                    for id in self.ships_left:
-                        xs, ys = np.where(self.opponent_ships_with_ids == id)
-                        if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
-                            for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                                self.set_style(f"bclicked{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
-                                sunk_foreground = Image.open("img/recusant_sigil.png").resize(sunk_background.size)
-                                new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
-                                new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                square_dim = min(new_width, new_height)
-                                self.raw_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background, sunk_foreground).resize((square_dim, square_dim))
-                                sunk_image = ImageTk.PhotoImage(self.raw_images[index_x*self.col_size + index_y])
-                                self.image_dict[(index_x, index_y)] = sunk_image
-                                self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bclicked{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
-                                                                                    self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
-                                self.button_dict[(index_x, index_y)].image = sunk_image
-                            self.ships_left.remove(id)
+                # mark as found if it was previously unfound
+                if self.checks_found[row_index, col_index] == 0:
 
+                    self.checks_found[row_index, col_index] = 1
+
+                    # check if a bingo has been achieved
+                    if self.bingo and self.row_size == self.col_size:
+                        for possible_bingo in self.possible_bingos:
+                            if np.sum(possible_bingo * self.checks_found) == self.row_size:
+                                xs, ys = np.where(possible_bingo == 1)
+                                for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                    self.set_style(f"bbingo{index_x}{index_y}.TButton", background=self.marking_colors["Bingo (Bunter)"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                    self.button_dict[(index_x, index_y)].configure(style=f"bbingo{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                        self.change_button_color(self.marking_colors["Bingo (Bunter)"], "black", row_index, col_index, current_border_color, placing_ship))
+                    
+                    # check if boat is sunk and change the button colors to reflect that or if there even are boats to begin with
+                    elif hasattr(self, 'ships_left'):
+                        for id in self.ships_left:
+                            xs, ys = np.where(self.opponent_ships_with_ids == id)
+                            if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                                for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                    self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                    sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
+                                    sunk_foreground = Image.open("img/recusant_sigil.png").resize(sunk_background.size)
+                                    new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+                                    new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
+                                    print(index_x, index_y)
+                                    self.used_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background.convert('RGBA'), sunk_foreground.convert('RGBA')).resize((new_width, new_height))
+                                    sunk_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
+                                    self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bsunk{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
+                                                                                        self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
+                                    self.button_dict[(index_x, index_y)].image = sunk_image
+                                # self.ships_left.remove(id)
+
+                # undo any bingos or sunk battleships if need be
+                else:
+
+                    print(self.checks_found[row_index, col_index])
+
+                    # if the mode is bingo
+                    if self.bingo and self.row_size == self.col_size:
+                        # get number of bingos before
+                        old_bingo_squares = []
+                        for possible_bingo in self.possible_bingos:
+                            if np.sum(possible_bingo * self.checks_found) == self.row_size:
+                                xs, ys = np.where(possible_bingo == 1)
+                                old_bingo_squares += [(xs[i], ys[i]) for i in range(len(xs))]    
+
+                        self.checks_found[row_index, col_index] = 0
+
+                        # get the number of bingos that remain
+                        new_bingo_squares = []
+                        for possible_bingo in self.possible_bingos:
+                            if np.sum(possible_bingo * self.checks_found) == self.row_size:
+                                xs, ys = np.where(possible_bingo == 1)
+                                new_bingo_squares += [(xs[i], ys[i]) for i in range(len(xs))]     
+
+                        bingo_squares_removed = set(old_bingo_squares) - set(new_bingo_squares)
+
+                        # remove previous bingos and change their functionality
+                        for (i, j) in bingo_squares_removed:
+                            if (i,j) == (row_index, col_index):
+                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.button_dict[(i, j) ].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
+                                                                                    self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, current_border_color, placing_ship))
+                            if (i,j) != (row_index, col_index) and (i,j) in bingo_squares_removed:
+                                self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.button_dict[(i, j)].configure(style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
+                                                                                    self.change_button_color(self.marking_colors["Marking Color"], "black", row_index, col_index, current_border_color, placing_ship))
+
+                    # if the mode is battleships
+                    elif hasattr(self, 'ships_left'):
+                        # get the ships that were previously sunk
+                        old_sunk_squares = []
+                        for id in self.ships_left:
+                            xs, ys = np.where(self.opponent_ships_with_ids == id)
+                            if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                                for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                    old_sunk_squares.append((index_x, index_y))
+
+                        self.checks_found[row_index, col_index] = 0
+
+                        # get the sunk ships that remain
+                        new_sunk_squares = []
+                        for id in self.ships_left:
+                            xs, ys = np.where(self.opponent_ships_with_ids == id)
+                            if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
+                                for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
+                                    new_sunk_squares.append((index_x, index_y))
+                        
+                        sunk_squares_removed = set(old_sunk_squares) - set(new_sunk_squares)
+                        # remove previous battleships and change their functionality
+                        # LOOP OVER SUNK_SQUARES REMOVED
+                        for (i,j) in sunk_squares_removed:
+                            print(i,j)
+                            correct_revert_sunk_color = self.marking_colors["Battleship Miss"] if self.opponent_ships_with_ids[i][j] == 0 else self.marking_colors["Battleship Hit"]
+                            new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+                            new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
+                            self.used_images[i * self.col_size + j] = self.raw_images[i * self.col_size + j].resize((new_width, new_height))
+                            old_reverted_image = ImageTk.PhotoImage(self.used_images[i * self.col_size + j])
+                            if (i,j) == (row_index, col_index):
+                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
+                                                                                    self.change_button_color("black", correct_revert_sunk_color, row_index, col_index, current_border_color, placing_ship))
+                            if (i,j) != (row_index, col_index) and (i,j) in sunk_squares_removed:
+                                self.set_style(f"bclicked{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
+                                                                                    self.change_button_color(correct_revert_sunk_color, "black", row_index, col_index, current_border_color, placing_ship))
+                            self.button_dict[(i, j)].image = old_reverted_image
 
     def copy_seed(self, event=None):
         subprocess.run("clip", universal_newlines=True, input=f"({self.row_size}, {self.col_size}, '{self.seedname}')")
@@ -1175,8 +1261,11 @@ class BattleshipBoard():
         subprocess.Popen(r'explorer /open,"."')
     
 
-    def load_settings(self):
-        settings_filename = fd.askopenfilename()
+    def load_settings(self, preset=False):
+        if preset:
+            settings_filename = fd.askopenfilename(initialdir="presets")
+        else:
+            settings_filename = fd.askopenfilename()
         with open(settings_filename, "r") as settings_file:
             settings = settings_file.readlines()
             for line in settings:
@@ -1197,6 +1286,7 @@ class BattleshipBoard():
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
+            print(self.hints)
             os.remove('hints.txt')
 
             os.mkdir('enemyspoilers')
@@ -1341,7 +1431,7 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
-        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn")]
+        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("Blizzard Lord", "Xigbar"), ("Volcano Lord", "Xigbar"), ("Beast", "Xigbar")]
         if "Luxord became Luxord (Data)" in replacements:
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
