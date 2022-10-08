@@ -122,8 +122,7 @@ class BattleshipBoard():
         # Action Mode Menu
         actions = Menu(menubar, tearoff = False)
         actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size), accelerator="Ctrl+G")
-        actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: ")))
-        actions.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
+        actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: ")))   
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Load Ship Layout', command=self.upload_ship_layout, accelerator="Ctrl+U")
         actions.add_command(label = 'Save Ship Layout', command=self.download_ship_layout, accelerator="Ctrl+D")
@@ -138,14 +137,10 @@ class BattleshipBoard():
 
         # Customize Mode Menu
         customize = Menu(menubar, tearoff = False)
+        customize.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
-        customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
-        customize.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
-        customize.add_command(label = 'Change Icon Style', command=self.set_icon_style)
-        fill_checked = IntVar(value = self.fill)
-        customize.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
         menubar.add_cascade(label = 'Customize', menu=customize)
 
 
@@ -155,6 +150,17 @@ class BattleshipBoard():
         validations.add_command(label = 'Validate Opponent/Shared Ships', command=self.validate_opponent_ships)
         menubar.add_cascade(label = "Validate", menu=validations)
 
+
+        # Visuals Mode Menu
+        visuals = Menu(menubar, tearoff = False)
+        visuals.add_command(label = 'Set Latency Timer', command=self.set_latency)
+        visuals.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
+        visuals.add_command(label = 'Change Icon Style', command=self.set_icon_style)
+        fill_checked = IntVar(value = self.fill)
+        customize.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
+        menubar.add_cascade(label = "Visuals", menu=visuals)
+
+
         # Information Menu
         self.info = Menu(menubar, tearoff=False)
         self.info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
@@ -162,6 +168,7 @@ class BattleshipBoard():
 
         self.root.config(menu=menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.root.iconbitmap("img/static/battleships.ico")
         self.root.mainloop()
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
@@ -317,6 +324,7 @@ class BattleshipBoard():
         except TypeError or ValueError:
             window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
+            popup.iconbitmap("img/static/warning.ico")
             popup.wm_title("ERROR!")
             popup.geometry("281x70")
             self.root.update_idletasks()
@@ -466,6 +474,7 @@ class BattleshipBoard():
         window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
         popup = Tk()
         if np.sum(opponent_ships) == 0:
+            popup.iconbitmap("img/static/warning.ico")
             popup.wm_title("WARNING!")
             popup.geometry("530x80")
             self.root.update_idletasks()
@@ -476,6 +485,7 @@ class BattleshipBoard():
             B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
             B1.pack()
         else:
+            popup.iconbitmap("img/static/success.ico")
             popup.wm_title("Success!")
             popup.geometry("155x70")
             self.root.update_idletasks()
@@ -492,7 +502,6 @@ class BattleshipBoard():
             os.remove('ships.txt')
 
         self.opponent_ships_with_ids = self.find_ships(opponent_ships)
-        print(self.opponent_ships_with_ids)
         self.ships_left = list(range(1, int(np.max(self.opponent_ships_with_ids)) + 1))
 
         for x in range(self.row_size):
@@ -547,38 +556,38 @@ class BattleshipBoard():
                                 main_boss_photo = Image.open(f'img/{self.icons}/{replacement_boss}.webp').resize((new_width, new_height)).convert('RGBA')
                                 background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
                                 paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
-                                # resize the original image if you want
-                                # main_boss_photo = main_boss_photo.resize((paste_x * 2, paste_y * 2))
                                 arena_boss_photo = Image.open(f"img/{self.icons}/{orig_boss}.webp").convert('RGBA')
                                 arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
-                                arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
-                                arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
+                                if self.fill:
+                                    arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
+                                    arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
+                                    arena_boss_photo = arena_white_background
                                 index_x, index_y = hint_button_key[0], hint_button_key[1]
                                 hinted_border_color = "white"
-                                border = (max(1, self.root.winfo_width()//250), max(1, self.root.winfo_width()//250), max(1, self.root.winfo_width()//250), self.root.winfo_width()//250)
+                                border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
                                 background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
-                                if self.fill:
-                                    arena_white_background = ImageOps.expand(arena_white_background, border=border, fill=hinted_border_color)
-                                else:
-                                    # white background won't actually exist here
-                                    arena_white_background = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                                arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
                                 if replacement_boss == "ArmoredXemnas":
                                     if self.armored_xemnas_hinted:
-                                        background.paste(arena_white_background, (0, 0), mask = arena_white_background)
+                                        # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
+                                        background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
                                         background.save('temp.png')
                                         old_arena_boss_photo = Image.open(f"img/{self.icons}/{self.first_boss_hint}.webp").convert('RGBA')
                                         old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
-                                        old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
-                                        old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
+                                        if self.fill:
+                                            old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
+                                            old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
+                                            old_arena_boss_photo = old_arena_white_background
+                                        old_arena_boss_photo = ImageOps.expand(old_arena_boss_photo, border=border, fill=hinted_border_color)
                                         background = Image.open('temp.png')
-                                        background.paste(old_arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = old_arena_white_background)
-                                        # os.remove('temp.png')
+                                        background.paste(old_arena_boss_photo, (paste_x * 19 // 10, 0), mask = old_arena_boss_photo)
+                                        os.remove('temp.png')
                                     else:
                                         self.armored_xemnas_hinted = True
                                         self.first_boss_hint = orig_boss
-                                        background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
+                                        background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
                                 else:
-                                    background.paste(arena_white_background, (paste_x * 19 // 10, paste_y * 19 // 10), mask = arena_white_background)
+                                    background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
                                 self.used_images[index_x*self.col_size + index_y] = background.resize((new_width, new_height))
                                 hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                 self.button_dict[(index_x, index_y)].configure(image = hinted_image)
@@ -741,6 +750,7 @@ class BattleshipBoard():
             if (row_size != col_size):
                 window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
                 popup = Tk()
+                popup.iconbitmap("img/static/warning.ico")
                 popup.wm_title("WARNING!")
                 popup.geometry("347x70")
                 # self.root.update_idletasks()
@@ -872,10 +882,9 @@ class BattleshipBoard():
                                 for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
                                     self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                     sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
-                                    sunk_foreground = Image.open("img/recusant_sigil.png").resize(sunk_background.size)
+                                    sunk_foreground = Image.open("img/static/recusant_sigil.png").resize(sunk_background.size)
                                     new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
                                     new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                    print(index_x, index_y)
                                     self.used_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background.convert('RGBA'), sunk_foreground.convert('RGBA')).resize((new_width, new_height))
                                     sunk_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                     self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bsunk{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
@@ -941,9 +950,7 @@ class BattleshipBoard():
                         
                         sunk_squares_removed = set(old_sunk_squares) - set(new_sunk_squares)
                         # remove previous battleships and change their functionality
-                        # LOOP OVER SUNK_SQUARES REMOVED
                         for (i,j) in sunk_squares_removed:
-                            print(i,j)
                             correct_revert_sunk_color = self.marking_colors["Battleship Miss"] if self.opponent_ships_with_ids[i][j] == 0 else self.marking_colors["Battleship Hit"]
                             new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
                             new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
@@ -1286,7 +1293,6 @@ class BattleshipBoard():
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
-            print(self.hints)
             os.remove('hints.txt')
 
             os.mkdir('enemyspoilers')
@@ -1302,6 +1308,7 @@ class BattleshipBoard():
             popup = Tk()
             if type(self.replacements) == tuple:
                 self.replacements = self.replacements[1]
+                popup.iconbitmap("img/static/warning.ico")
                 popup.wm_title("WARNING!")
                 popup.geometry("380x80")
                 self.root.update_idletasks()
@@ -1312,6 +1319,7 @@ class BattleshipBoard():
                 B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
                 B1.pack()
             else:
+                popup.iconbitmap("img/static/success.ico")
                 popup.wm_title("Success!")
                 popup.geometry("217x70")
                 self.root.update_idletasks()
@@ -1431,7 +1439,7 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
-        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("Blizzard Lord", "Xigbar"), ("Volcano Lord", "Xigbar"), ("Beast", "Xigbar")]
+        blacklisted_pairs = j
         if "Luxord became Luxord (Data)" in replacements:
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
