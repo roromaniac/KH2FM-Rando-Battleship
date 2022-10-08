@@ -102,6 +102,12 @@ class BattleshipBoard():
             for line in settings:
                 exec(line)
 
+        # Load in Settings from Previously Loaded Settings
+        with open("previous_preset.txt") as previous_settings:
+            previous = previous_settings.readlines()
+            for line in previous:
+                exec(line)
+
         self.generate_card(self.row_size, self.col_size)
 
         # Geometry moved into generate_card to reflect grid size.
@@ -894,9 +900,7 @@ class BattleshipBoard():
 
                 # undo any bingos or sunk battleships if need be
                 else:
-
-                    print(self.checks_found[row_index, col_index])
-
+                    
                     # if the mode is bingo
                     if self.bingo and self.row_size == self.col_size:
                         # get number of bingos before
@@ -920,8 +924,9 @@ class BattleshipBoard():
                         # remove previous bingos and change their functionality
                         for (i, j) in bingo_squares_removed:
                             if (i,j) == (row_index, col_index):
+                                print(dir(self.button_dict[(i,j)]))
                                 self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.button_dict[(i, j) ].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
+                                self.button_dict[(i, j)].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in bingo_squares_removed:
                                 self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
@@ -1273,10 +1278,12 @@ class BattleshipBoard():
             settings_filename = fd.askopenfilename(initialdir="presets")
         else:
             settings_filename = fd.askopenfilename()
-        with open(settings_filename, "r") as settings_file:
-            settings = settings_file.readlines()
-            for line in settings:
-                exec(line)
+        with open("previous_preset.txt", "w") as last_settings:
+            with open(settings_filename, "r") as settings_file:
+                settings = settings_file.readlines()
+                for line in settings:
+                    exec(line)
+                    last_settings.write(line)
         self.set_seedname(self.seedname)
         self.generate_card(self.row_size, self.col_size, self.seedname)
 
