@@ -103,10 +103,11 @@ class BattleshipBoard():
                 exec(line)
 
         # Load in Settings from Previously Loaded Settings
-        with open("previous_preset.txt") as previous_settings:
-            previous = previous_settings.readlines()
-            for line in previous:
-                exec(line)
+        if os.path.exists("previous_preset.txt"):
+            with open("previous_preset.txt", "r") as previous_settings:
+                previous = previous_settings.readlines()
+                for line in previous:
+                    exec(line)
 
         self.generate_card(self.row_size, self.col_size)
 
