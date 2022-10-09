@@ -18,6 +18,7 @@ from copy import deepcopy
 
 from tkinter import filedialog as fd
 from tkinter import simpledialog
+from cryptography.fernet import Fernet
 
 from PIL import Image, ImageOps, ImageDraw
 
@@ -446,28 +447,35 @@ class BattleshipBoard():
         return placed_ships
 
 
-    def download_ship_layout(self, event=None):
+    def download_ship_layout(self, key = b'7RiMHser-GrCxgcWMJ0HoOxjF_Sww5_RORHnyH-Dp50=', event=None):
         try:
             os.makedirs('ships')
         except FileExistsError:
             pass
+        fernet = Fernet(key)
+        encrypted_ships = fernet.encrypt(str(self.place_grid.tolist()).encode())
         np.savetxt("ships/ships.txt", self.place_grid, fmt='%s')
-        shutil.make_archive('ships/', 'zip', 'ships')
+        with open("ships/encrypted_ships.txt", "wb") as f:
+            f.write(encrypted_ships)
         subprocess.Popen(r'explorer /open,"."')
         
 
 
-    def upload_ship_layout(self, same_board=False, event=None):
+    def upload_ship_layout(self, same_board=False, key = b'7RiMHser-GrCxgcWMJ0HoOxjF_Sww5_RORHnyH-Dp50=', event=None):
 
         # if you're uploading a manually placed board
         if not same_board:
 
-            # unpack zip file of opponent's ships
+            # get opponent's encrypted ships
             filename = fd.askopenfilename()
-            shutil.unpack_archive(filename, '.', 'zip')
         
             # load opponent ships
-            opponent_ships = np.loadtxt('ships.txt')
+            # CHANGE IT SO THAT YOU LOAD IN THE encrypted txt and not the zip!
+            fernet = Fernet(key)
+            with open(filename, "rb") as opponent_file:
+                encrypted_opponent_ships = opponent_file.read()
+            # decrypt opponent ships
+            opponent_ships = np.array(ast.literal_eval(fernet.decrypt(encrypted_opponent_ships).decode()))
 
             # load your ships
             your_ships = np.loadtxt('ships/ships.txt')
