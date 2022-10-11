@@ -13,8 +13,8 @@ def inject_checks(starting_buffer=10,interval=10):
 
     time.sleep(starting_buffer)
 
-    checks = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus']
-    checks_found = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus']
+    checks = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus', 'Hades', 'Pete', 'Larxene', 'Barbossa', 'GrimReaper1', 'GrimReaper2', 'ShanYu', 'Beast', 'Xigbar', 'PrisonKeeper']
+    checks_found = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus', 'Hades', 'Pete', 'Larxene', 'Barbossa', 'GrimReaper1', 'GrimReaper2', 'ShanYu', 'Beast', 'Xigbar', 'PrisonKeeper']
 
     while len(checks) != 0:
 

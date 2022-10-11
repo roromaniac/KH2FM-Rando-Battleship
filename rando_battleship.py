@@ -933,11 +933,12 @@ class BattleshipBoard():
                         # remove previous bingos and change their functionality
                         for (i, j) in bingo_squares_removed:
                             if (i,j) == (row_index, col_index):
-                                print(dir(self.button_dict[(i,j)]))
+                                self.set_style(f"bbingo{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in bingo_squares_removed:
+                                self.set_style(f"bbingo{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color(self.marking_colors["Marking Color"], "black", row_index, col_index, current_border_color, placing_ship))
