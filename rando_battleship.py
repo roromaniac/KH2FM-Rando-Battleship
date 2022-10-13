@@ -59,24 +59,15 @@ class BattleshipBoard():
                                 'sephiroth', 
                                 'terra'
                             ]
+
         # reset your own ships
         reset_ships_array = np.zeros((self.row_size, self.col_size))
         if not os.path.isdir('ships'):
             os.mkdir('ships')
         np.savetxt("ships/ships.txt", reset_ships_array, fmt='%s')
 
-        # reset the autotracker
+        # set bingo to false by default to avoid errors
         self.bingo = False
-        self.armored_xemnas_hinted = False
-        self.armored_xemnas_found = False
-        self.armored_xemnas_seen = False
-        self.important_checks_recorded = []
-        self.seen_bosses_recorded = []
-        self.checks_found = np.zeros((self.row_size, self.col_size))
-        if os.path.exists('checks.txt'):
-            os.remove('checks.txt')
-        if os.path.exists('seenbosses.txt'):
-            os.remove('seenbosses.txt')
 
         # Create & Configure root 
         self.root = Tk()
@@ -416,7 +407,7 @@ class BattleshipBoard():
                             placed_ships[x + i, y] = 1
                             if hasattr(self, 'restrictions') and (self.labels[(x + i) * self.col_size + y] in self.restrictions.keys()):
                                 restrictions_tracker[self.labels[(x + i) * self.col_size + y]] += 1
-                # print(restrictions_tracker)
+
             xs, ys = np.where(placed_ships == 1)
             unavailable_placements = [[xs[j], ys[j]] for j in range(len(xs))]
             # remove squares from available placements if the index is valid
@@ -713,6 +704,19 @@ class BattleshipBoard():
 
 
     def generate_card(self, row_size, col_size, seedname=None, event=None):
+
+        # reset the autotracker
+        self.armored_xemnas_hinted = False
+        self.armored_xemnas_found = False
+        self.armored_xemnas_seen = False
+        self.important_checks_recorded = []
+        self.seen_bosses_recorded = []
+        self.checks_found = np.zeros((self.row_size, self.col_size))
+        if os.path.exists('checks.txt'):
+            os.remove('checks.txt')
+        if os.path.exists('seenbosses.txt'):
+            os.remove('seenbosses.txt')
+
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
         self.checks_found = np.zeros((row_size, col_size))
@@ -829,6 +833,13 @@ class BattleshipBoard():
                     new_color = self.marking_colors["Bingo (Bunter)"]
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
+            elif ttk.Style().lookup(f"bsunk{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Sink"]:
+                if new_color == self.marking_colors["Annotating Color"]:
+                    current_color = self.marking_colors["Battleship Sink"]
+                else:
+                    new_color = self.marking_colors["Battleship Sink"]
+                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
             elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Marking Color"]:
                 if new_color == self.marking_colors["Annotating Color"]:
                     current_color = self.marking_colors["Marking Color"]
@@ -850,13 +861,6 @@ class BattleshipBoard():
                     new_color = self.marking_colors["Battleship Miss"]
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
-            elif ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == self.marking_colors["Battleship Sink"]:
-                if new_color == self.marking_colors["Annotating Color"]:
-                    current_color = self.marking_colors["Battleship Sink"]
-                else:
-                    new_color = self.marking_colors["Battleship Sink"]
-                self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                            self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
             else:
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, "#333333", False, right_clicked=True))
@@ -874,6 +878,7 @@ class BattleshipBoard():
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
             if not placing_ship:
+                
                 # mark as found if it was previously unfound
                 if self.checks_found[row_index, col_index] == 0:
 
@@ -903,7 +908,7 @@ class BattleshipBoard():
                                     self.used_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background.convert('RGBA'), sunk_foreground.convert('RGBA')).resize((new_width, new_height))
                                     sunk_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                     self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bsunk{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
-                                                                                        self.change_button_color(self.marking_colors["Battleship Sink"], self.marking_colors["Battleship Sink"], row_index, col_index, current_border_color, placing_ship))
+                                                                                        self.change_button_color(self.marking_colors["Battleship Sink"], "black", row_index, col_index, current_border_color, placing_ship))
                                     self.button_dict[(index_x, index_y)].image = sunk_image
                                 # self.ships_left.remove(id)
 
@@ -972,10 +977,12 @@ class BattleshipBoard():
                             self.used_images[i * self.col_size + j] = self.raw_images[i * self.col_size + j].resize((new_width, new_height))
                             old_reverted_image = ImageTk.PhotoImage(self.used_images[i * self.col_size + j])
                             if (i,j) == (row_index, col_index):
+                                self.set_style(f"bsunk{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", correct_revert_sunk_color, row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in sunk_squares_removed:
+                                self.set_style(f"bsunk{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.set_style(f"bclicked{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color(correct_revert_sunk_color, "black", row_index, col_index, current_border_color, placing_ship))
@@ -1456,7 +1463,7 @@ def make_replacements_dict():
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
         spoiler_file.close()
-        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar")]
+        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
         if "Luxord became Luxord (Data)" in replacements:
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
