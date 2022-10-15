@@ -816,6 +816,15 @@ class BattleshipBoard():
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None, right_clicked=False):
         
+        # by default, the new_color should be the marking color
+        # change the new_color to be the updated marking color if new_color isn't in marking_colors
+        current_colors = list(self.marking_colors.values()) + ["black"] # color settings plus starting color
+        print(current_color, new_color)
+        if current_color not in current_colors:
+            current_color = self.marking_colors["Marking Color"]
+        if new_color not in current_colors:
+            new_color = self.marking_colors["Marking Color"]
+
         # don't change button functionality if we're just making notes
         if right_clicked:
             # change the style to annotated
