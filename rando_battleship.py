@@ -819,7 +819,6 @@ class BattleshipBoard():
         # by default, the new_color should be the marking color
         # change the new_color to be the updated marking color if new_color isn't in marking_colors
         current_colors = list(self.marking_colors.values()) + ["black"] # color settings plus starting color
-        print(current_color, new_color)
         if current_color not in current_colors:
             current_color = self.marking_colors["Marking Color"]
         if new_color not in current_colors:
