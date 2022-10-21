@@ -1008,8 +1008,8 @@ class BattleshipBoard():
                             if row_index + vert_offset in range(0, self.row_size) and col_index + hori_offset in range(0, self.col_size):
                                 neighbor_row_index = row_index + vert_offset
                                 neighbor_col_index = col_index + hori_offset
-                                self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.images[neighbor_row_index*self.col_size + neighbor_col_index])
-                                self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.images[neighbor_row_index*self.col_size + neighbor_col_index]
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.used_images[neighbor_row_index*self.col_size + neighbor_col_index])
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.used_images[neighbor_row_index*self.col_size + neighbor_col_index]
 
                     # check if a bingo has been achieved
                     if self.bingo and self.row_size == self.col_size:

@@ -13,8 +13,8 @@ def inject_checks(starting_buffer=10,interval=10):
 
     time.sleep(starting_buffer)
 
-    checks = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus', 'Hades', 'Pete', 'Larxene', 'Barbossa', 'GrimReaper1', 'GrimReaper2', 'ShanYu', 'Beast', 'Xigbar', 'PrisonKeeper']
-    checks_found = ['Sark', 'Xemnas', 'DarkThorn', 'Thresholder', 'Xaldin', 'Scar', 'Experiment', 'Vexen', 'Saix', 'VolcanoLord', 'BlizzardLord', 'Axel1', 'Axel2', 'Zexion', 'Xemnas', 'Larxene', 'Cerberus', 'Hades', 'Pete', 'Larxene', 'Barbossa', 'GrimReaper1', 'GrimReaper2', 'ShanYu', 'Beast', 'Xigbar', 'PrisonKeeper']
+    checks = ['Report1', 'Report2', 'Report12', 'Report13']
+    checks_found = ['Report1', 'Report2', 'Report12', 'Report13']
 
     while len(checks) != 0:
 
