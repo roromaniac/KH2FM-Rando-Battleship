@@ -1001,15 +1001,17 @@ class BattleshipBoard():
                     if self.mystery:
                         directions, span = self.mystery[0], int(self.mystery[1])
                         direction_dict = {"N": (-span, 0), "E": (0, span), "W": (0, -span), "S": (span, 0), "NE": (-span, span), "NW": (-span, -span), "SE": (span, span), "SW": (span, -span)}
-                        self.button_dict[(row_index, col_index)].configure(image = self.images[row_index*self.col_size + col_index])
-                        self.button_dict[(row_index, col_index)].image = self.images[row_index*self.col_size + col_index]
+                        self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index])
+                        self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+                        self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
                         for direction in directions:
                             vert_offset, hori_offset = direction_dict[direction]
                             if row_index + vert_offset in range(0, self.row_size) and col_index + hori_offset in range(0, self.col_size):
                                 neighbor_row_index = row_index + vert_offset
                                 neighbor_col_index = col_index + hori_offset
-                                self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.used_images[neighbor_row_index*self.col_size + neighbor_col_index])
-                                self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.used_images[neighbor_row_index*self.col_size + neighbor_col_index]
+                                self.image_dict[((neighbor_row_index, neighbor_col_index))] = ImageTk.PhotoImage(self.used_images[neighbor_row_index*self.col_size + neighbor_col_index])
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.image_dict[((neighbor_row_index, neighbor_col_index))])
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.image_dict[((neighbor_row_index, neighbor_col_index))]
 
                     # check if a bingo has been achieved
                     if self.bingo and self.row_size == self.col_size:
