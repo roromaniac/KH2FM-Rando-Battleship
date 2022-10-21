@@ -69,6 +69,9 @@ class BattleshipBoard():
         # set bingo to false by default to avoid errors
         self.bingo = False
 
+        # set mystery to false by default
+        self.mystery = False
+
         # Create & Configure root 
         self.root = Tk()
         self.root.title("Rando Battleship (v2.0.0)")
@@ -107,21 +110,21 @@ class BattleshipBoard():
         # self.root.geometry(f"{64*self.row_size}x{64*self.col_size}")
 
         # Creating Menubar
-        menubar = Menu(self.root)
+        self.menubar = Menu(self.root)
 
         # Board Mode Menu
-        board_mode = Menu(menubar, tearoff = False)
+        board_mode = Menu(self.menubar, tearoff = False)
         board_mode.add_command(label='Place Mode (Blind)', underline=5, command=lambda: self.place_mode(self.row_size, self.col_size, blind=True), accelerator="Ctrl+B")
         board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False), accelerator="Ctrl+V")
         board_mode.add_command(label='Same Board Mode', command=lambda: self.upload_ship_layout(True), accelerator="Ctrl+S")
         board_mode.add_command(label='Clear Placements', command=lambda: self.place_mode(self.row_size, self.col_size, blind=self.blind), accelerator="Ctrl+C")
-        menubar.add_cascade(label ='Placement', menu=board_mode)
+        self.menubar.add_cascade(label ='Placement', menu=board_mode)
 
 
         # Action Mode Menu
-        actions = Menu(menubar, tearoff = False)
+        actions = Menu(self.menubar, tearoff = False)
         actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size), accelerator="Ctrl+G")
-        actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: ")))   
+        actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: "), gen_card=True))   
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Load Ship Layout', command=self.upload_ship_layout, accelerator="Ctrl+U")
         actions.add_command(label = 'Save Ship Layout', command=self.download_ship_layout, accelerator="Ctrl+D")
@@ -131,41 +134,50 @@ class BattleshipBoard():
         actions.add_command(label = 'Save Settings as New Preset', command=lambda: self.save_settings(True))
         actions.add_command(label = 'Start Autotracking', command=self.autotracking_timer)
         actions.add_command(label = 'Load Boss Enemy Seed', command=self.load_bunter_seed)
-        menubar.add_cascade(label = 'Actions', menu=actions)
+        self.menubar.add_cascade(label = 'Actions', menu=actions)
 
 
         # Customize Mode Menu
-        customize = Menu(menubar, tearoff = False)
+        customize = Menu(self.menubar, tearoff = False)
         customize.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
-        menubar.add_cascade(label = 'Customize', menu=customize)
+        customize.add_command(label = 'Add Mystery Mode', command=self.change_mystery_mode)
+        customize.add_command(label = 'Add Maze Mode')
+        customize.add_command(label = 'Spoil Card', command=self.reveal_card)
+        self.menubar.add_cascade(label = 'Customize', menu=customize)
 
 
         # Validation Mode Menu
-        validations = Menu(menubar, tearoff = False)
+        validations = Menu(self.menubar, tearoff = False)
         validations.add_command(label = 'Validate Your Ships', command=self.validate_self_ships)
         validations.add_command(label = 'Validate Opponent/Shared Ships', command=self.validate_opponent_ships)
-        menubar.add_cascade(label = "Validate", menu=validations)
+        self.menubar.add_cascade(label = "Validate", menu=validations)
 
 
         # Visuals Mode Menu
-        visuals = Menu(menubar, tearoff = False)
+        visuals = Menu(self.menubar, tearoff = False)
         visuals.add_command(label = 'Set Latency Timer', command=self.set_latency)
         visuals.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
         visuals.add_command(label = 'Change Icon Style', command=self.set_icon_style)
         fill_checked = IntVar(value = self.fill)
-        customize.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
-        menubar.add_cascade(label = "Visuals", menu=visuals)
+        visuals.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
+        self.menubar.add_cascade(label = "Visuals", menu=visuals)
 
 
         # Information Menu
-        self.info = Menu(menubar, tearoff=False)
-        self.info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
-        menubar.add_cascade(label = 'Info', menu=self.info)
+        info = Menu(self.menubar, tearoff=False)
+        info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
+        info.add_command(label = f'Seedname: {self.seedname}')
+        self.menubar.add_cascade(label = 'Info', menu=info)
 
-        self.root.config(menu=menubar)
+
+        # Seedname Display
+        self.menubar.add_cascade(label = f'Seedname: {self.seedname}', menu=info)
+        
+
+        self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
         self.root.mainloop()
@@ -199,8 +211,74 @@ class BattleshipBoard():
         style.configure(name, background=background, bordercolor=bordercolor, highlightthickness=highlightthickness, padding=padding, relief=SOLID)
 
 
-    def set_seedname(self, new_seedname):
+    def set_seedname(self, new_seedname, gen_card=False):
         self.seedname = new_seedname
+        self.menubar.entryconfig(7, label = f'Seedname: {self.seedname}')
+        if gen_card:
+            self.generate_card(self.row_size, self.col_size, self.seedname)
+
+
+    def reveal_card(self):
+        self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
+        new_width = int(self.width/ (self.col_size*self.scaling_factor))
+        new_height = int(self.height / (self.row_size*self.scaling_factor))
+        for row_index in range(self.row_size):
+            for col_index in range(self.col_size):
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
+                self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+                self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
+
+
+    def set_fog_of_war(self, entries, window):
+
+        directions = ["N", "E", "W", "S", "NE", "NW", "SW", "SE"]
+        # directions and span
+        self.mystery = [directions[i] for i in range(len(entries) - 1) if entries[i + 1].instate(["selected"])], entries[len(entries)].get()
+        window.destroy()
+        # alter the seed but keep it consistent
+        seedname_list = list(self.seedname)
+        for i in range(len(self.seedname)):
+            print(len(self.check_names[i]) % len(self.seedname), len(self.check_names[i]) % 10)
+            seedname_list[len(self.check_names[i]) % len(self.seedname)] = str((len(self.check_names[i]) - len(self.check_names[i + 1])) % 7)
+        self.set_seedname("".join(seedname_list))
+        self.generate_card(self.row_size, self.col_size, self.seedname, mystery=True)
+
+
+    def change_mystery_mode(self):
+        window = Tk() 
+        window.title("Mystery Mode Settings")
+
+        window.geometry("300x220")
+
+        directions = ["N", "E", "W", "S", "NE", "NW", "SW", "SE"]
+
+        labels = {}
+        entries = {}
+
+        for i in range(1, 9):
+
+            labels[i] = ttk.Label(window, text = f"{directions[i - 1]}")
+            labels[i].grid(row = i, column = 0)
+
+            entries[i] = ttk.Checkbutton(window, cursor=None)
+            entries[i].state(["!alternate"])
+            if hasattr(self, 'directions'):
+                entries[i].state(["!selected"])
+                if self.directions[i - 1]:
+                  entries[i].state(["selected"])  
+            else:
+                entries[i].state(["selected"])
+            entries[i].grid(row = i, column = 1)
+
+        
+        labels[i+1] = ttk.Label(window, text = "Span")
+        labels[i+1].grid(row = i + 1, column = 0)
+        entries[i+1] = ttk.Entry(window, width = 5)
+        entries[i+1].insert(0, 1)
+        entries[i+1].grid(row = i + 1, column = 1)
+
+        btn1 = ttk.Button(window, text = "Apply and Generate New Card", command = lambda: self.set_fog_of_war(entries, window))
+        btn1.grid(row = i+2, column = 1)
 
 
     # for refactoring rewrite this into fewer lines
@@ -213,7 +291,8 @@ class BattleshipBoard():
                 f.write(f"self.height = {self.height}\n")
                 f.write(f"self.x = {self.x}\n")
                 f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {new_data}")
+                f.write(f"self.fill = {new_data}\n")
+                f.write(f"self.directions = {self.directions}")
         elif type(new_data) == str:
             with open("tracker_settings.txt", "w") as f:
                 f.write(f"self.icons = '{new_data}'\n")
@@ -222,7 +301,8 @@ class BattleshipBoard():
                 f.write(f"self.height = {self.height}\n")
                 f.write(f"self.x = {self.x}\n")
                 f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {self.fill}")
+                f.write(f"self.fill = {self.fill}\n")
+                f.write(f"self.directions = {self.directions}")
         elif type(new_data) == dict:
             with open("tracker_settings.txt", "w") as f:
                 f.write(f"self.icons = '{self.icons}'\n")
@@ -231,7 +311,8 @@ class BattleshipBoard():
                 f.write(f"self.height = {self.height}\n")
                 f.write(f"self.x = {self.x}\n")
                 f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {self.fill}")
+                f.write(f"self.fill = {self.fill}\n")
+                f.write(f"self.directions = {self.directions}")
         elif type(new_data) == tuple and all([type(x) == int for x in new_data]):
             if position:
                 with open("tracker_settings.txt", "w") as f:
@@ -241,7 +322,8 @@ class BattleshipBoard():
                     f.write(f"self.height = {self.height}\n")
                     f.write(f"self.x = {new_data[0]}\n")
                     f.write(f"self.y = {new_data[1]}\n")
-                    f.write(f"self.fill = {self.fill}")
+                    f.write(f"self.fill = {self.fill}\n")
+                    f.write(f"self.directions = {self.directions}")
             else:
                 with open("tracker_settings.txt", "w") as f:
                     f.write(f"self.icons = '{self.icons}'\n")
@@ -250,7 +332,17 @@ class BattleshipBoard():
                     f.write(f"self.height = {new_data[1]}\n")
                     f.write(f"self.x = {self.x}\n")
                     f.write(f"self.y = {self.y}\n")
-                    f.write(f"self.fill = {self.fill}")
+                    f.write(f"self.fill = {self.fill}\n")
+                    f.write(f"self.directions = {self.directions}")
+        elif type(new_data) == list:
+            f.write(f"self.icons = '{self.icons}'\n")
+            f.write(f"self.marking_colors = {self.marking_colors}\n")
+            f.write(f"self.width = {new_data[0]}\n")
+            f.write(f"self.height = {new_data[1]}\n")
+            f.write(f"self.x = {self.x}\n")
+            f.write(f"self.y = {self.y}\n")
+            f.write(f"self.fill = {self.fill}\n")
+            f.write(f"self.directions = {new_data}")
 
 
     def change_marking_colors(self, color_list = ["white"]):
@@ -312,6 +404,7 @@ class BattleshipBoard():
         self.update_tracker_settings(self.marking_colors)
         window.destroy()
         self.change_marking_colors([v for v in self.marking_colors.values()])
+
 
     def set_marking_colors(self, window):
         window.destroy()
@@ -641,7 +734,7 @@ class BattleshipBoard():
 
         # read found bosses
         # happens AFTER b/c we don't want to create the mostrecentlyfound check for a boss that hasn't been beaten yet
-        if os.path.exists('seenbosses.txt'):
+        if os.path.exists('seenbosses.txt') and not self.mystery:
             with open("seenbosses.txt") as seenbosses_from_DAs_tracker:
                 seen_bosses = seenbosses_from_DAs_tracker.read().splitlines()
             # check if any new bosses were seen
@@ -690,22 +783,27 @@ class BattleshipBoard():
 
 
     def resize_image(self, event):
-        new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
-        new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
-        self.update_tracker_settings((self.root.winfo_width(), self.root.winfo_height()))
+        new_width = int(self.width/ (self.col_size*self.scaling_factor))
+        new_height = int(self.height / (self.row_size*self.scaling_factor))
+        self.update_tracker_settings((self.width, self.height))
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.update_tracker_settings((self.x, self.y), position=True)
         self.image_dict = {}
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
                 self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
-                self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+                if (not self.mystery or self.checks_found[row_index, col_index] == 1):
+                    self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+                    self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
 
 
-    def generate_card(self, row_size, col_size, seedname=None, event=None):
+
+    def generate_card(self, row_size, col_size, seedname=None, mystery=False, event=None):
 
         # reset the autotracker
+        if not mystery:
+            self.mystery = False
         self.armored_xemnas_hinted = False
         self.armored_xemnas_found = False
         self.armored_xemnas_seen = False
@@ -729,7 +827,10 @@ class BattleshipBoard():
 
         # battleship settings (images and sizes) and randomization
         if seedname is None:
-            self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(26))
+            if hasattr(self, 'menubar'):
+                self.set_seedname(''.join(random.choice(string.ascii_letters) for _ in range(6)))
+            else:
+                self.seedname = ''.join(random.choice(string.ascii_letters) for _ in range(6))
         self.check_names = [x for x in os.listdir(f"img/{self.icons}")]
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
@@ -755,7 +856,12 @@ class BattleshipBoard():
             for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
-                self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                if not self.mystery:
+                    self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                else:
+                    black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.col_size*self.scaling_factor)))))
+                    self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = black_background, takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                    self.button_dict[(row_index, col_index)].image = black_background
                 # self.button_dict[(row_index, col_index)].focus_set()
                 self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
@@ -879,18 +985,31 @@ class BattleshipBoard():
 
             # change button color
             self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
-            self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                            self.change_button_color(new_color, self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False, right_clicked=True))
-            # reset the annotation behavior
             self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
                                                                             self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
 
+            # reset the annotation behavior
+            self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
+                                                                            self.change_button_color(new_color, self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False, right_clicked=True))
+            
             if not placing_ship:
                 
                 # mark as found if it was previously unfound
                 if self.checks_found[row_index, col_index] == 0:
 
                     self.checks_found[row_index, col_index] = 1
+                    if self.mystery:
+                        directions, span = self.mystery[0], int(self.mystery[1])
+                        direction_dict = {"N": (-span, 0), "E": (0, span), "W": (0, -span), "S": (span, 0), "NE": (-span, span), "NW": (-span, -span), "SE": (span, span), "SW": (span, -span)}
+                        self.button_dict[(row_index, col_index)].configure(image = self.images[row_index*self.col_size + col_index])
+                        self.button_dict[(row_index, col_index)].image = self.images[row_index*self.col_size + col_index]
+                        for direction in directions:
+                            vert_offset, hori_offset = direction_dict[direction]
+                            if row_index + vert_offset in range(0, self.row_size) and col_index + hori_offset in range(0, self.col_size):
+                                neighbor_row_index = row_index + vert_offset
+                                neighbor_col_index = col_index + hori_offset
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.images[neighbor_row_index*self.col_size + neighbor_col_index])
+                                self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.images[neighbor_row_index*self.col_size + neighbor_col_index]
 
                     # check if a bingo has been achieved
                     if self.bingo and self.row_size == self.col_size:
