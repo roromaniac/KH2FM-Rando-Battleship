@@ -835,7 +835,7 @@ class BattleshipBoard():
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
         random.Random(self.seedname).shuffle(self.check_names)
-        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.col_size*self.scaling_factor)))) for check in self.check_names]
+        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
         self.used_images = deepcopy(self.raw_images)
         self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
@@ -859,7 +859,7 @@ class BattleshipBoard():
                 if not self.mystery:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                 else:
-                    black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.col_size*self.scaling_factor)))))
+                    black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))))
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = black_background, takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                     self.button_dict[(row_index, col_index)].image = black_background
                 # self.button_dict[(row_index, col_index)].focus_set()
