@@ -1,8 +1,8 @@
-self.icons = 'sonic'
+self.icons = 'televo'
 self.marking_colors = {'Marking Color': '#ff80ff', 'Annotating Color': '#FFAC1C', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': 'purple'}
 self.width = 653
-self.height = 90
-self.x = -1031
-self.y = -25
+self.height = 690
+self.x = -938
+self.y = 2
 self.fill = True
 self.directions = [True, True, True, True, False, False, False, False]
