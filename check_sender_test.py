@@ -13,8 +13,8 @@ def inject_checks(starting_buffer=10,interval=10):
 
     time.sleep(starting_buffer)
 
-    checks = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen']
-    checks_found = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen']
+    checks = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas']
+    checks_found = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas']
 
     while len(checks) != 0:
 

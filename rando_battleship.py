@@ -8,6 +8,7 @@ import webbrowser
 import json
 import itertools as it
 import ast
+import psutil
 
 from tkinter import *
 from tkinter import ttk
@@ -33,7 +34,7 @@ class BattleshipBoard():
         # attribute setting
         self.row_size, self.col_size = row_size, col_size
         self.ship_sizes = [5, 4, 3, 3, 2]
-        self.latency = 2
+        self.latency = 1000
 
         # checks allowed on grid
         self.check_types = [ 
@@ -169,12 +170,15 @@ class BattleshipBoard():
         # Information Menu
         info = Menu(self.menubar, tearoff=False)
         info.add_command(label = 'Help', command=self.open_help_window, accelerator="Ctrl+H")
-        info.add_command(label = f'Seedname: {self.seedname}')
         self.menubar.add_cascade(label = 'Info', menu=info)
 
 
         # Seedname Display
-        self.menubar.add_cascade(label = f'Seedname: {self.seedname}', menu=info)
+        self.menubar.add_cascade(label = f'Seedname: {self.seedname}')
+
+
+        # Autotracking Display
+        self.menubar.add_cascade(label = f"No game found.")
         
 
         self.root.config(menu=self.menubar)
@@ -412,7 +416,7 @@ class BattleshipBoard():
     
     def set_latency(self):
         try:
-            self.latency = float(simpledialog.askstring(title="Latency Timer", prompt="Set Latency to: ", initialvalue=1.5))
+            self.latency = 1000 * int(simpledialog.askstring(title="Latency Timer", prompt="Set Latency to: ", initialvalue=2))
         except TypeError or ValueError:
             window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
@@ -422,7 +426,7 @@ class BattleshipBoard():
             self.root.update_idletasks()
             popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
             popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
-            label = ttk.Label(popup, text='ERROR: Please set your latency to a numerical value.')
+            label = ttk.Label(popup, text='ERROR: Please set your latency to an integer value.')
             label.pack(side="top", fill="x", pady=10)
             B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
             B1.pack()
@@ -620,6 +624,20 @@ class BattleshipBoard():
 
     def autotracking(self):
 
+        current_programs = (p.name() for p in psutil.process_iter())
+        pc_detected = "KINGDOM HEARTS II FINAL MIX.exe" in current_programs
+        pcsx2_dtected = "pcsx2.exe" in current_programs
+        detection = any([pc_detected, pcsx2_dtected])
+        checks_txt_exists = os.path.exists('checks.txt')
+        # the last member of the if statement ensures we only change the menubar if we're finding the game
+        # for the first time
+        if detection and checks_txt_exists and detection != self.game_found: 
+            self.game_found = True
+            self.menubar.entryconfig(8, label = f'Autotracking!')
+        elif not detection:
+            self.game_found = False
+            self.menubar.entryconfig(8, label = f'No game found.')
+
         key_list = list(self.autotracking_labels.keys())
         val_list = list(self.autotracking_labels.values())
 
@@ -639,6 +657,20 @@ class BattleshipBoard():
                         # in boss enemy we don't want to track Future Pete
                         if new_check == "Pete":
                             continue
+                        # reveal final fights if Xemnas is defeated
+                        if new_check == "Xemnas":
+                            armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
+                            armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
+                            self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                            ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
+                            self.button_dict[(armored_xem_1_key)].configure(image = ff_image_1)
+                            self.button_dict[(armored_xem_1_key)].image = ff_image_1
+                            self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
+                            self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                            ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
+                            self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
+                            self.button_dict[(armored_xem_2_key)].image = ff_image_2
+                            self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
                         # if a report is found and is a hint for bunter, change the tracker
                         try:
                             if new_check in self.hints.keys():
@@ -779,6 +811,7 @@ class BattleshipBoard():
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+        self.game_found = False
         self.root.after(self.latency, self.autotracking)
 
 
