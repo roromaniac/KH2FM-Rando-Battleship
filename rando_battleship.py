@@ -184,9 +184,8 @@ class BattleshipBoard():
         self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
+        self.autotracking_timer()
         self.root.mainloop()
-        if hasattr(self, 'autotracking_process'):
-            self.autotracking_process.kill()
 
 
     def set_fill(self):
@@ -631,6 +630,7 @@ class BattleshipBoard():
         checks_txt_exists = os.path.exists('checks.txt')
         # the last member of the if statement ensures we only change the menubar if we're finding the game
         # for the first time
+        #### THIS if and elif combo is weird (maybe turn into an else statement?)
         if detection and checks_txt_exists and detection != self.game_found: 
             self.game_found = True
             self.menubar.entryconfig(8, label = f'Autotracking!')
