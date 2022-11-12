@@ -21,7 +21,7 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog
 from cryptography.fernet import Fernet
 
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageOps
 
 class BattleshipBoard():
 
@@ -73,6 +73,9 @@ class BattleshipBoard():
         # set mystery to false by default
         self.mystery = False
 
+        # set maze to false by default
+        self.maze = False
+
         # Create & Configure root 
         self.root = Tk()
         self.root.title("Rando Battleship (v2.0.0)")
@@ -85,7 +88,7 @@ class BattleshipBoard():
         self.root.bind_all("<Control-v>", lambda event: self.place_mode(self.row_size, self.col_size, blind=False))
         self.root.bind_all("<Control-s>", lambda event: self.upload_ship_layout(True))
         self.root.bind_all("<Control-c>", lambda event: self.place_mode(self.row_size, self.col_size, blind=self.blind))
-        self.root.bind_all("<Control-g>", lambda event: self.generate_card(self.row_size, self.col_size))
+        self.root.bind_all("<Control-g>", lambda event: self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze))
         self.root.bind_all("<Control-r>", self.resize_grid)
         self.root.bind_all("<Control-i>", self.copy_seed)
         self.root.bind_all("<Control-u>", lambda event: self.upload_ship_layout(False))
@@ -107,11 +110,11 @@ class BattleshipBoard():
 
         self.generate_card(self.row_size, self.col_size)
 
-        # Geometry moved into generate_card to reflect grid size.
-        # self.root.geometry(f"{64*self.row_size}x{64*self.col_size}")
-
         # Creating Menubar
         self.menubar = Menu(self.root)
+
+        # Geometry moved into generate_card to reflect grid size.
+        # self.root.geometry(f"{64*self.row_size}x{64*self.col_size}")
 
         # Board Mode Menu
         board_mode = Menu(self.menubar, tearoff = False)
@@ -124,7 +127,7 @@ class BattleshipBoard():
 
         # Action Mode Menu
         actions = Menu(self.menubar, tearoff = False)
-        actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size), accelerator="Ctrl+G")
+        actions.add_command(label = 'Generate New Card', command=lambda: self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze), accelerator="Ctrl+G")
         actions.add_command(label = 'Change Seedname', command=lambda: self.set_seedname(simpledialog.askstring(title="Set Seedname", prompt="Seedname: "), gen_card=True))   
         actions.add_command(label = 'Copy Seed Name', command=self.copy_seed, accelerator="Ctrl+I")
         actions.add_command(label = 'Load Ship Layout', command=self.upload_ship_layout, accelerator="Ctrl+U")
@@ -144,8 +147,10 @@ class BattleshipBoard():
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
-        customize.add_command(label = 'Add Mystery Mode', command=self.change_mystery_mode)
-        customize.add_command(label = 'Add Maze Mode')
+        mystery_check = IntVar(value = self.mystery)
+        customize.add_checkbutton(label = 'Mystery Mode', onvalue=1, offvalue=0, command=self.change_mystery_mode, variable=mystery_check)
+        maze_check = IntVar(value = self.maze)
+        customize.add_checkbutton(label = 'Maze Mode', onvalue=1, offvalue=0, command=self.generate_maze_card, variable=maze_check)
         customize.add_command(label = 'Spoil Card', command=self.reveal_card)
         self.menubar.add_cascade(label = 'Customize', menu=customize)
 
@@ -178,14 +183,15 @@ class BattleshipBoard():
 
 
         # Autotracking Display
-        self.menubar.add_cascade(label = f"No game found.")
+        self.menubar.add_cascade(label = f"Not tracking.")
         
 
         self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
-        self.autotracking_timer()
+        # self.autotracking_timer()
         self.root.mainloop()
+        self.root.after(500, self.kill_autotracking_process)    
 
 
     def set_fill(self):
@@ -241,13 +247,18 @@ class BattleshipBoard():
         # alter the seed but keep it consistent
         seedname_list = list(self.seedname)
         for i in range(len(self.seedname)):
-            print(len(self.check_names[i]) % len(self.seedname), len(self.check_names[i]) % 10)
             seedname_list[len(self.check_names[i]) % len(self.seedname)] = str((len(self.check_names[i]) - len(self.check_names[i + 1])) % 7)
         self.set_seedname("".join(seedname_list))
-        self.generate_card(self.row_size, self.col_size, self.seedname, mystery=True)
+        self.generate_card(self.row_size, self.col_size, self.seedname, mystery=self.mystery, maze=self.maze)
 
 
     def change_mystery_mode(self):
+
+        if self.mystery:
+            self.mystery = False
+            self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze)
+            return None
+
         window = Tk() 
         window.title("Mystery Mode Settings")
 
@@ -282,7 +293,6 @@ class BattleshipBoard():
 
         btn1 = ttk.Button(window, text = "Apply and Generate New Card", command = lambda: self.set_fog_of_war(entries, window))
         btn1.grid(row = i+2, column = 1)
-
 
     # for refactoring rewrite this into fewer lines
     def update_tracker_settings(self, new_data, position=False):
@@ -623,21 +633,6 @@ class BattleshipBoard():
 
     def autotracking(self):
 
-        current_programs = (p.name() for p in psutil.process_iter())
-        pc_detected = "KINGDOM HEARTS II FINAL MIX.exe" in current_programs
-        pcsx2_dtected = "pcsx2.exe" in current_programs
-        detection = any([pc_detected, pcsx2_dtected])
-        checks_txt_exists = os.path.exists('checks.txt')
-        # the last member of the if statement ensures we only change the menubar if we're finding the game
-        # for the first time
-        #### THIS if and elif combo is weird (maybe turn into an else statement?)
-        if detection and checks_txt_exists and detection != self.game_found: 
-            self.game_found = True
-            self.menubar.entryconfig(8, label = f'Autotracking!')
-        elif not detection:
-            self.game_found = False
-            self.menubar.entryconfig(8, label = f'No game found.')
-
         key_list = list(self.autotracking_labels.keys())
         val_list = list(self.autotracking_labels.values())
 
@@ -806,13 +801,28 @@ class BattleshipBoard():
     
         self.root.after(self.latency, self.autotracking)
 
-
-    def autotracking_timer(self):
+    
+    def kill_autotracking_process(self):
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
+            if os.path.exists('checks.txt'):
+                os.remove('checks.txt')
+
+
+    def autotracking_timer(self):
+
+        self.kill_autotracking_process()
         self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
-        self.game_found = False
-        self.root.after(self.latency, self.autotracking)
+        current_programs = (p.name() for p in psutil.process_iter())
+        pc_detected = "KINGDOM HEARTS II FINAL MIX.exe" in current_programs
+        pcsx2_dtected = "pcsx2.exe" in current_programs
+        detection = any([pc_detected, pcsx2_dtected])
+        
+        if detection:
+            self.menubar.entryconfig(8, label = f'Autotracking!')
+            self.root.after(self.latency, self.autotracking)
+        else:
+            self.root.after(self.latency, self.autotracking_timer)
 
 
     def resize_image(self, event):
@@ -831,12 +841,65 @@ class BattleshipBoard():
                     self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
 
 
+    def display_edges(self, row_index, col_index):
+        # add padding to display edges on unrevealed cells
+        if self.button_dict.get((row_index - 1, col_index)) is not None and ((row_index - 1, col_index), (row_index, col_index)) in self.edges:
+            self.padding_dict[(row_index - 1, col_index)][3] = 3
+            pady = (self.padding_dict[(row_index - 1, col_index)][0], self.padding_dict[(row_index - 1, col_index)][3])
+            self.button_dict[(row_index - 1, col_index)].grid(row=row_index - 1, column=col_index, pady=pady, sticky="nwes")
 
-    def generate_card(self, row_size, col_size, seedname=None, mystery=False, event=None):
+        if self.button_dict.get((row_index + 1, col_index)) is not None and ((row_index, col_index), (row_index + 1, col_index)) in self.edges:
+            self.padding_dict[(row_index + 1, col_index)][0] = 3
+            pady = (self.padding_dict[(row_index + 1, col_index)][0], self.padding_dict[(row_index + 1, col_index)][3])
+            self.button_dict.get((row_index + 1, col_index)).grid(row=row_index + 1, column=col_index, pady=pady, sticky="nwes")
+
+        if self.button_dict.get((row_index, col_index - 1)) is not None and ((row_index, col_index - 1), (row_index, col_index)) in self.edges:
+            self.padding_dict[(row_index, col_index - 1)][2] = 3
+            padx = (self.padding_dict[(row_index, col_index - 1)][1], self.padding_dict[(row_index, col_index - 1)][2])
+            self.button_dict[(row_index, col_index - 1)].grid(row=row_index, column=col_index - 1, padx=padx, sticky="nwes")
+            
+        if self.button_dict.get((row_index, col_index + 1)) is not None and ((row_index, col_index), (row_index, col_index + 1)) in self.edges:
+            self.padding_dict[(row_index, col_index + 1)][1] = 3
+            padx = (self.padding_dict[(row_index, col_index + 1)][1], self.padding_dict[(row_index, col_index + 1)][2])
+            self.button_dict[(row_index, col_index + 1)].grid(row=row_index, column=col_index + 1, padx=padx, sticky="nwes")
+        
+
+
+    def display_maze(self, row_index, col_index, mystery=False):
+        neighbors = self.neighbor_dict[(row_index, col_index)]
+        edge_sides = ""
+        # get neighboring edges
+        possible_edges = [min([((row_index, col_index), x), (x, (row_index, col_index))], key = lambda k: (k[0], k[1])) for x in neighbors]
+        # add exterior edges
+        # print((row_index, col_index))
+        for possible_edge in possible_edges:
+            if possible_edge in self.edges:
+                if possible_edge[0][0] < row_index or row_index == 0:
+                    edge_sides += "n"
+                if possible_edge[1][0] > row_index or row_index == self.row_size - 1:
+                    edge_sides += "s"
+                if possible_edge[0][1] < col_index or col_index == 0:
+                    edge_sides += "w"
+                if possible_edge[1][1] > col_index or col_index == self.col_size - 1:
+                    edge_sides += "e"
+        if mystery:
+            self.display_edges(row_index, col_index)
+            self.display_edges(row_index - 1, col_index)
+            self.display_edges(row_index + 1, col_index)
+            self.display_edges(row_index, col_index - 1)
+            self.display_edges(row_index, col_index + 1)
+        padx = (6 if col_index == 0 else 3 if "w" in edge_sides else 0, 6 if col_index == self.col_size - 1 else 3 if "e" in edge_sides else 0)
+        pady = (6 if row_index == 0 else 3 if "n" in edge_sides else 0, 6 if row_index == self.row_size - 1 else 3 if "s" in edge_sides else 0)
+        self.padding_dict[(row_index, col_index)] = [pady[0], padx[0], padx[1], pady[1]]
+        self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, padx=padx, pady=pady, sticky="nwes")
+
+
+
+    def generate_card(self, row_size, col_size, seedname=None, mystery=False, maze=False, event=None):
 
         # reset the autotracker
-        if not mystery:
-            self.mystery = False
+        if maze:
+            self.edges = self.generate_maze()
         self.armored_xemnas_hinted = False
         self.armored_xemnas_found = False
         self.armored_xemnas_seen = False
@@ -850,13 +913,15 @@ class BattleshipBoard():
 
         if hasattr(self, 'autotracking_process'):
             self.autotracking_process.kill()
+            if os.path.exists('checks.txt'):
+                os.remove('checks.txt')
+        if hasattr(self, 'menubar'):
+            self.menubar.entryconfig(8, label = f'Not tracking.')
         self.checks_found = np.zeros((row_size, col_size))
         self.root.geometry(f"{self.width}x{self.height}")
         self.root.geometry(f"+{self.x}+{self.y}")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
-        # self.root.rowconfigure(0, weight=1)
-        # self.root.columnconfigure(0, weight=1)
 
         # battleship settings (images and sizes) and randomization
         if seedname is None:
@@ -878,7 +943,7 @@ class BattleshipBoard():
 
         #Create & Configure frame 
         self.frame=Frame(self.root)
-        self.frame.grid(row=0, column=0, sticky=N+S+E+W)
+        self.frame.grid(row=0, column=0, sticky=N+W+E+S)
 
         self.button_dict = {}
         self.autotracking_labels = {}
@@ -889,18 +954,30 @@ class BattleshipBoard():
             for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
-                if not self.mystery:
+                if not mystery:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
+                    if maze:
+                        self.display_maze(row_index, col_index)
                 else:
                     black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))))
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = black_background, takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                     self.button_dict[(row_index, col_index)].image = black_background
-                # self.button_dict[(row_index, col_index)].focus_set()
-                self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nsew")
+
+                if maze:
+                    if (row_index, col_index) == (0,0):
+                        self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="red", highlightthickness=10, padding=0)
+                    elif (row_index, col_index) == (self.row_size - 1, self.col_size - 1):
+                        self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#32CD32", highlightthickness=10, padding=0)
+                if hasattr(self, "padding_dict"):
+                    padx = self.padding_dict[(row_index, col_index)][1], self.padding_dict[(row_index, col_index)][2]
+                    pady = self.padding_dict[(row_index, col_index)][0], self.padding_dict[(row_index, col_index)][3]
+                    self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes", padx=padx, pady=pady)
+                else:
+                    self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "#333333", False))
+                                                                        self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "red" if (row_index, col_index) == (0, 0) else "#32CD32" if (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False))
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "#333333", False, right_clicked=True))
+                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "red" if (row_index, col_index) == (0, 0) else "#32CD32" if (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False, right_clicked=True))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
 
         # setup bingo logic if bingo and board is square
@@ -921,12 +998,13 @@ class BattleshipBoard():
             else:
                 self.possible_bingos = self.identify_bingos(row_size)
 
+        # Made obsolete really... keeping in case it's needed.
         # checks not inlucded = checks too late in the list to be included in the grid + checks removed due to board size changes from restrictions (this is the union)
-        checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir(f'img/{self.icons}')) - set(x[:-5] for x in self.check_names))
-        print("------------------------------------------------")
-        print("New Card Generation Detected: Checks Removed are")
-        print("------------------------------------------------")
-        [print(removed_check) for removed_check in list(checks_not_included)]
+        # checks_not_included = set(x[:-5] for x in self.check_names[row_size * col_size:]).union(set(x[:-5] for x in os.listdir(f'img/{self.icons}')) - set(x[:-5] for x in self.check_names))
+        # print("------------------------------------------------")
+        # print("New Card Generation Detected: Checks Removed are")
+        # print("------------------------------------------------")
+        # [print(removed_check) for removed_check in list(checks_not_included)]
         self.frame.bind("<Configure>", self.resize_image)
         self.root.bind("<FocusIn>", self.resize_image)
         self.root.bind("<FocusOut>", self.resize_image)
@@ -952,6 +1030,67 @@ class BattleshipBoard():
         return bingo_arrays
 
 
+    def generate_all_edges(self, squares):
+        # the padding dictionary is used for the combination of mystery mode and maze mode
+        self.padding_dict = {}
+        edges = set()
+        for square in squares:
+            horizontal_coords = []
+            vertical_coords = []
+            left_neighbor_coord = square[0] - 1
+            right_neighbor_coord = square[0] + 1
+            up_neighbor_coord = square[1] - 1
+            down_neighbor_coord = square[1] + 1
+            self.padding_dict[square] = [0, 0, 0, 0] #nwes format
+            if square[0] == 0:
+                self.padding_dict[square][0] = 6
+            if square[0] == self.row_size - 1:
+                self.padding_dict[square][3] = 6
+            if square[1] == 0:
+                self.padding_dict[square][1] = 6
+            if square[1] == self.col_size - 1:
+                self.padding_dict[square][2] = 6 
+            if left_neighbor_coord >= 0:
+                horizontal_coords.append((left_neighbor_coord, square[1]))
+            if right_neighbor_coord < self.col_size:
+                horizontal_coords.append((right_neighbor_coord, square[1]))
+            if up_neighbor_coord >= 0 :
+                vertical_coords.append((square[0], up_neighbor_coord))
+            if down_neighbor_coord < self.row_size:
+                vertical_coords.append((square[0], down_neighbor_coord))
+            neighbors = horizontal_coords + vertical_coords
+            edges = edges.union(set([min([(square, x), (x, square)], key = lambda k: (k[0], k[1])) for x in neighbors]))
+            self.neighbor_dict[square] = neighbors
+        return edges
+
+    # https://stackoverflow.com/questions/48563302/borders-on-some-sides (for visuals)        
+
+    def generate_maze(self):
+        self.maze = True
+        self.neighbor_dict = {}
+        squares = list(it.product(list(range(self.row_size)), list(range(self.col_size))))
+        edges = self.generate_all_edges(squares)
+        current = (0,0)
+        visited = set()
+        squares.remove(current)
+        while len(visited) != self.row_size * self.col_size:
+            visited.add(current)
+            new_neighbor = random.choice(self.neighbor_dict.get(current))
+            if new_neighbor not in visited:
+                edges.discard(min([(current, new_neighbor), (new_neighbor, current)], key = lambda k: (k[0], k[1])))
+            current = new_neighbor
+        return edges
+
+
+    def generate_maze_card(self):
+        if self.maze:
+            self.maze = False
+            self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze)
+            return None
+        self.edges = self.generate_maze()
+        self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=True)
+
+
 
     def change_button_color(self, current_color, new_color, row_index, col_index, current_border_color, placing_ship=False, event=None, right_clicked=False):
         
@@ -970,6 +1109,8 @@ class BattleshipBoard():
                 current_border_color = "yellow"
             elif ttk.Style().lookup(f"bbossfound{row_index}{col_index}.TButton", "bordercolor") == "blue" and ttk.Style().lookup(f"bclicked{row_index}{col_index}.TButton", 'background') == "#d9d9d9":
                 current_border_color = "blue"
+            elif ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor") == "red" or ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor") == "#32CD32":
+                current_border_color = ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor")
             self.set_style(f"bnoted{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
             self.button_dict[(row_index, col_index)].configure(style=f"bnoted{row_index}{col_index}.TButton")
             # figure out what the previous background color was so if we uncheck it the right background shows
@@ -1036,6 +1177,8 @@ class BattleshipBoard():
                         self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index])
                         self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                         self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
+                        if self.maze:
+                            self.display_maze(row_index, col_index, mystery=True)
                         for neighbor in range(1, span + 1):
                             direction_dict = {"N": (-neighbor, 0), "E": (0, neighbor), "W": (0, -neighbor), "S": (neighbor, 0), "NE": (-neighbor, neighbor), "NW": (-neighbor, -neighbor), "SE": (neighbor, neighbor), "SW": (neighbor, -neighbor)}
                             for direction in directions:
@@ -1046,7 +1189,8 @@ class BattleshipBoard():
                                     self.image_dict[((neighbor_row_index, neighbor_col_index))] = ImageTk.PhotoImage(self.used_images[neighbor_row_index*self.col_size + neighbor_col_index])
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.image_dict[((neighbor_row_index, neighbor_col_index))])
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.image_dict[((neighbor_row_index, neighbor_col_index))]
-
+                                    if self.maze:
+                                        self.display_maze(neighbor_row_index, neighbor_col_index)
                     # check if a bingo has been achieved
                     if self.bingo and self.row_size == self.col_size:
                         for possible_bingo in self.possible_bingos:
@@ -1206,7 +1350,7 @@ class BattleshipBoard():
             pass
             # create popup window that says sizes should be integers
         self.row_size, self.col_size = int(row_size), int(col_size)
-        self.generate_card(self.row_size, self.col_size)
+        self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze)
                             
 
     def place_mode(self, row_size, col_size, blind=True, event=None):
@@ -1223,7 +1367,7 @@ class BattleshipBoard():
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
                 else:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*col_size + col_index], style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
-                self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky=N+S+E+W)
+                self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky=N+E+S+W)
 
 
     def set_ship_sizes(self, entries, window):
@@ -1266,7 +1410,7 @@ class BattleshipBoard():
         self.valid_checks = [True if x in self.valid_types else False for x in self.labels]
         self.row_size, self.col_size = [int(np.floor(np.sqrt(sum(self.valid_checks))))] * 2
         if gen_card:
-            self.generate_card(self.row_size, self.col_size)
+            self.generate_card(self.row_size, self.col_size, mystery=self.mystery, maze=self.maze)
         window.destroy()
 
 
