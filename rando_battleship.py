@@ -31,10 +31,13 @@ class BattleshipBoard():
         self.scaling_factor = 1.37
         self.color_types = 6
 
-        # attribute setting
+        # battleship setting
         self.row_size, self.col_size = row_size, col_size
         self.ship_sizes = [5, 4, 3, 3, 2]
+
+        # timing settings 
         self.latency = 1000
+        self.auto_detect_counter = 0
 
         # checks allowed on grid
         self.check_types = [ 
@@ -189,9 +192,8 @@ class BattleshipBoard():
         self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
-        # self.autotracking_timer()
+        self.autotracking_timer()
         self.root.mainloop()
-        self.root.after(500, self.kill_autotracking_process)    
 
 
     def set_fill(self):
@@ -202,6 +204,7 @@ class BattleshipBoard():
     def on_closing(self):
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
         self.update_tracker_settings((self.x, self.y), position=True)
+        self.kill_autotracking_process()
         self.root.destroy()
 
 
@@ -633,6 +636,15 @@ class BattleshipBoard():
 
     def autotracking(self):
 
+        self.auto_detect_counter += 1
+        
+        if self.auto_detect_counter == 10:
+            self.auto_detect_counter = 0
+            if not self.detect_game():
+                self.autotracking_timer()
+                return
+
+
         key_list = list(self.autotracking_labels.keys())
         val_list = list(self.autotracking_labels.values())
 
@@ -800,6 +812,7 @@ class BattleshipBoard():
                         print(f"The not yet beaten boss {new_boss} is not in the pool.")
     
         self.root.after(self.latency, self.autotracking)
+        
 
     
     def kill_autotracking_process(self):
@@ -809,20 +822,30 @@ class BattleshipBoard():
                 os.remove('checks.txt')
 
 
-    def autotracking_timer(self):
-
-        self.kill_autotracking_process()
-        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+    def detect_game(self):
         current_programs = (p.name() for p in psutil.process_iter())
         pc_detected = "KINGDOM HEARTS II FINAL MIX.exe" in current_programs
         pcsx2_dtected = "pcsx2.exe" in current_programs
         detection = any([pc_detected, pcsx2_dtected])
-        
         if detection:
             self.menubar.entryconfig(8, label = f'Autotracking!')
+        else:
+            self.menubar.entryconfig(8, label = f'No game found.')
+
+        return detection
+
+
+    def autotracking_timer(self):
+
+        self.kill_autotracking_process()
+        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+
+        detection = self.detect_game()
+
+        if detection:
             self.root.after(self.latency, self.autotracking)
         else:
-            self.root.after(self.latency, self.autotracking_timer)
+            self.root.after(10000, self.autotracking_timer)
 
 
     def resize_image(self, event):
@@ -968,16 +991,15 @@ class BattleshipBoard():
                         self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="red", highlightthickness=10, padding=0)
                     elif (row_index, col_index) == (self.row_size - 1, self.col_size - 1):
                         self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#32CD32", highlightthickness=10, padding=0)
-                if hasattr(self, "padding_dict"):
-                    padx = self.padding_dict[(row_index, col_index)][1], self.padding_dict[(row_index, col_index)][2]
-                    pady = self.padding_dict[(row_index, col_index)][0], self.padding_dict[(row_index, col_index)][3]
-                    self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes", padx=padx, pady=pady)
+                        padx = self.padding_dict[(row_index, col_index)][1], self.padding_dict[(row_index, col_index)][2]
+                        pady = self.padding_dict[(row_index, col_index)][0], self.padding_dict[(row_index, col_index)][3]
+                        self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes", padx=padx, pady=pady)
                 else:
                     self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "red" if (row_index, col_index) == (0, 0) else "#32CD32" if (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False))
+                                                                        self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, "red" if maze and (row_index, col_index) == (0, 0) else "#32CD32" if maze and (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False))
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
-                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "red" if (row_index, col_index) == (0, 0) else "#32CD32" if (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False, right_clicked=True))
+                                                                        self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "red" if maze and (row_index, col_index) == (0, 0) else "#32CD32" if maze and (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False, right_clicked=True))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
 
         # setup bingo logic if bingo and board is square
