@@ -146,6 +146,9 @@ class BattleshipBoard():
 
         # Customize Mode Menu
         customize = Menu(self.menubar, tearoff = False)
+        customize.add_command(label = 'Set Latency Timer', command=self.set_latency)
+        autodetect_checked = IntVar(value = self.autodetect)
+        customize.add_checkbutton(label = 'Include Autodetect', command=self.set_autodetect, variable=autodetect_checked)
         customize.add_command(label = 'Resize Grid', command=self.resize_grid, accelerator="Ctrl+R")
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
@@ -167,7 +170,6 @@ class BattleshipBoard():
 
         # Visuals Mode Menu
         visuals = Menu(self.menubar, tearoff = False)
-        visuals.add_command(label = 'Set Latency Timer', command=self.set_latency)
         visuals.add_command(label = 'Change Marking Color', command= lambda color_list=[v for v in self.marking_colors.values()]: self.change_marking_colors(color_list))
         visuals.add_command(label = 'Change Icon Style', command=self.set_icon_style)
         fill_checked = IntVar(value = self.fill)
@@ -192,13 +194,20 @@ class BattleshipBoard():
         self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
-        self.autotracking_timer()
+        if self.autodetect:
+            self.autotracking_timer()
         self.root.mainloop()
 
 
     def set_fill(self):
         self.fill = not self.fill
         self.update_tracker_settings(self.fill)
+
+    def set_autodetect(self):
+        self.autodetect = not self.autodetect
+        self.update_tracker_settings(self.autodetect)
+        if self.autodetect:
+            self.autotracking_timer()
 
 
     def on_closing(self):
@@ -232,11 +241,11 @@ class BattleshipBoard():
 
     def reveal_card(self):
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
-        new_width = int(self.width/ (self.col_size*self.scaling_factor))
-        new_height = int(self.height / (self.row_size*self.scaling_factor))
+        current_width = int(self.width / (self.col_size*self.scaling_factor))
+        current_height = int(self.height / (self.row_size*self.scaling_factor))
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
-                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
+                self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((current_width, current_height)))
                 self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                 self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
 
@@ -298,17 +307,30 @@ class BattleshipBoard():
         btn1.grid(row = i+2, column = 1)
 
     # for refactoring rewrite this into fewer lines
-    def update_tracker_settings(self, new_data, position=False):
+    def update_tracker_settings(self, new_data, position=False, autodetect=False):
         if type(new_data) == bool:
-            with open("tracker_settings.txt", "w") as f:
-                f.write(f"self.icons = '{self.icons}'\n")
-                f.write(f"self.marking_colors = {self.marking_colors}\n")
-                f.write(f"self.width = {self.width}\n")
-                f.write(f"self.height = {self.height}\n")
-                f.write(f"self.x = {self.x}\n")
-                f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {new_data}\n")
-                f.write(f"self.directions = {self.directions}")
+            if autodetect:
+                with open("tracker_settings.txt", "w") as f:
+                    f.write(f"self.icons = '{self.icons}'\n")
+                    f.write(f"self.marking_colors = {self.marking_colors}\n")
+                    f.write(f"self.width = {self.width}\n")
+                    f.write(f"self.height = {self.height}\n")
+                    f.write(f"self.x = {self.x}\n")
+                    f.write(f"self.y = {self.y}\n")
+                    f.write(f"self.fill = {self.fill}\n")
+                    f.write(f"self.autodetect = {new_data}\n")
+                    f.write(f"self.directions = {self.directions}")
+            else:
+                with open("tracker_settings.txt", "w") as f:
+                    f.write(f"self.icons = '{self.icons}'\n")
+                    f.write(f"self.marking_colors = {self.marking_colors}\n")
+                    f.write(f"self.width = {self.width}\n")
+                    f.write(f"self.height = {self.height}\n")
+                    f.write(f"self.x = {self.x}\n")
+                    f.write(f"self.y = {self.y}\n")
+                    f.write(f"self.fill = {new_data}\n")
+                    f.write(f"self.autodetect = {self.autodetect}\n")
+                    f.write(f"self.directions = {self.directions}")
         elif type(new_data) == str:
             with open("tracker_settings.txt", "w") as f:
                 f.write(f"self.icons = '{new_data}'\n")
@@ -318,6 +340,7 @@ class BattleshipBoard():
                 f.write(f"self.x = {self.x}\n")
                 f.write(f"self.y = {self.y}\n")
                 f.write(f"self.fill = {self.fill}\n")
+                f.write(f"self.autodetect = {self.autodetect}\n")
                 f.write(f"self.directions = {self.directions}")
         elif type(new_data) == dict:
             with open("tracker_settings.txt", "w") as f:
@@ -328,6 +351,7 @@ class BattleshipBoard():
                 f.write(f"self.x = {self.x}\n")
                 f.write(f"self.y = {self.y}\n")
                 f.write(f"self.fill = {self.fill}\n")
+                f.write(f"self.autodetect = {self.autodetect}\n")
                 f.write(f"self.directions = {self.directions}")
         elif type(new_data) == tuple and all([type(x) == int for x in new_data]):
             if position:
@@ -339,6 +363,7 @@ class BattleshipBoard():
                     f.write(f"self.x = {new_data[0]}\n")
                     f.write(f"self.y = {new_data[1]}\n")
                     f.write(f"self.fill = {self.fill}\n")
+                    f.write(f"self.autodetect = {self.autodetect}\n")
                     f.write(f"self.directions = {self.directions}")
             else:
                 with open("tracker_settings.txt", "w") as f:
@@ -349,6 +374,7 @@ class BattleshipBoard():
                     f.write(f"self.x = {self.x}\n")
                     f.write(f"self.y = {self.y}\n")
                     f.write(f"self.fill = {self.fill}\n")
+                    f.write(f"self.autodetect = {self.autodetect}\n")
                     f.write(f"self.directions = {self.directions}")
         elif type(new_data) == list:
             f.write(f"self.icons = '{self.icons}'\n")
@@ -358,6 +384,7 @@ class BattleshipBoard():
             f.write(f"self.x = {self.x}\n")
             f.write(f"self.y = {self.y}\n")
             f.write(f"self.fill = {self.fill}\n")
+            f.write(f"self.autodetect = {self.autodetect}\n")
             f.write(f"self.directions = {new_data}")
 
 
@@ -644,7 +671,6 @@ class BattleshipBoard():
                 self.autotracking_timer()
                 return
 
-
         key_list = list(self.autotracking_labels.keys())
         val_list = list(self.autotracking_labels.values())
 
@@ -689,9 +715,9 @@ class BattleshipBoard():
                                 replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
                                 # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
-                                new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
-                                new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                main_boss_photo = Image.open(f'img/{self.icons}/{replacement_boss}.webp').resize((new_width, new_height)).convert('RGBA')
+                                current_width = int(self.width / (self.col_size*self.scaling_factor))
+                                current_height = int(self.height / (self.row_size*self.scaling_factor))
+                                main_boss_photo = Image.open(f'img/{self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
                                 background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
                                 paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
                                 arena_boss_photo = Image.open(f"img/{self.icons}/{orig_boss}.webp").convert('RGBA')
@@ -726,7 +752,7 @@ class BattleshipBoard():
                                         background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
                                 else:
                                     background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
-                                self.used_images[index_x*self.col_size + index_y] = background.resize((new_width, new_height))
+                                self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
                                 hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                 self.button_dict[(index_x, index_y)].configure(image = hinted_image)
                                 self.button_dict[(index_x, index_y)].image = hinted_image
@@ -823,14 +849,14 @@ class BattleshipBoard():
 
 
     def detect_game(self):
-        current_programs = (p.name() for p in psutil.process_iter())
-        pc_detected = "KINGDOM HEARTS II FINAL MIX.exe" in current_programs
-        pcsx2_dtected = "pcsx2.exe" in current_programs
-        detection = any([pc_detected, pcsx2_dtected])
+        detection = False
+        for process in psutil.process_iter():
+            if process.name() in ["KINGDOM HEARTS II FINAL MIX.exe", "pcsx2.exe"]:
+                detection = True
         if detection:
             self.menubar.entryconfig(8, label = f'Autotracking!')
         else:
-            self.menubar.entryconfig(8, label = f'No game found.')
+            self.menubar.entryconfig(8, label = f'Not tracking.')
 
         return detection
 
@@ -845,12 +871,12 @@ class BattleshipBoard():
         if detection:
             self.root.after(self.latency, self.autotracking)
         else:
-            self.root.after(10000, self.autotracking_timer)
+            self.root.after(7500, self.autotracking_timer)
 
 
     def resize_image(self, event):
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
-        new_width = int(self.width/ (self.col_size*self.scaling_factor))
+        new_width = int(self.width / (self.col_size*self.scaling_factor))
         new_height = int(self.height / (self.row_size*self.scaling_factor))
         self.update_tracker_settings((self.width, self.height))
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
@@ -928,7 +954,6 @@ class BattleshipBoard():
         self.armored_xemnas_seen = False
         self.important_checks_recorded = []
         self.seen_bosses_recorded = []
-        self.checks_found = np.zeros((self.row_size, self.col_size))
         if os.path.exists('checks.txt'):
             os.remove('checks.txt')
         if os.path.exists('seenbosses.txt'):
@@ -1196,7 +1221,9 @@ class BattleshipBoard():
                     self.checks_found[row_index, col_index] = 1
                     if self.mystery:
                         directions, span = self.mystery[0], int(self.mystery[1])
-                        self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index])
+                        current_width = int(self.width / (self.col_size*self.scaling_factor))
+                        current_height = int(self.height / (self.row_size*self.scaling_factor))
+                        self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((current_width, current_height)))
                         self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                         self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
                         if self.maze:
@@ -1208,7 +1235,7 @@ class BattleshipBoard():
                                 if row_index + vert_offset in range(0, self.row_size) and col_index + hori_offset in range(0, self.col_size):
                                     neighbor_row_index = row_index + vert_offset
                                     neighbor_col_index = col_index + hori_offset
-                                    self.image_dict[((neighbor_row_index, neighbor_col_index))] = ImageTk.PhotoImage(self.used_images[neighbor_row_index*self.col_size + neighbor_col_index])
+                                    self.image_dict[((neighbor_row_index, neighbor_col_index))] = ImageTk.PhotoImage(self.used_images[neighbor_row_index*self.col_size + neighbor_col_index].resize((current_width, current_height)))
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.image_dict[((neighbor_row_index, neighbor_col_index))])
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.image_dict[((neighbor_row_index, neighbor_col_index))]
                                     if self.maze:
@@ -1232,9 +1259,9 @@ class BattleshipBoard():
                                     self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                     sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
                                     sunk_foreground = Image.open("img/static/recusant_sigil.png").resize(sunk_background.size)
-                                    new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
-                                    new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                                    self.used_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background.convert('RGBA'), sunk_foreground.convert('RGBA')).resize((new_width, new_height))
+                                    current_width = int(self.width / (self.col_size*self.scaling_factor))
+                                    current_height = int(self.height / (self.row_size*self.scaling_factor))
+                                    self.used_images[index_x*self.col_size + index_y] = Image.alpha_composite(sunk_background.convert('RGBA'), sunk_foreground.convert('RGBA')).resize((current_width, current_height))
                                     sunk_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                     self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bsunk{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
                                                                                         self.change_button_color(self.marking_colors["Battleship Sink"], "black", row_index, col_index, current_border_color, placing_ship))
@@ -1301,9 +1328,9 @@ class BattleshipBoard():
                         # remove previous battleships and change their functionality
                         for (i,j) in sunk_squares_removed:
                             correct_revert_sunk_color = self.marking_colors["Battleship Miss"] if self.opponent_ships_with_ids[i][j] == 0 else self.marking_colors["Battleship Hit"]
-                            new_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
-                            new_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
-                            self.used_images[i * self.col_size + j] = self.raw_images[i * self.col_size + j].resize((new_width, new_height))
+                            current_width = int(self.width / (self.col_size*self.scaling_factor))
+                            current_height = int(self.height / (self.row_size*self.scaling_factor))
+                            self.used_images[i * self.col_size + j] = self.raw_images[i * self.col_size + j].resize((current_width, current_height))
                             old_reverted_image = ImageTk.PhotoImage(self.used_images[i * self.col_size + j])
                             if (i,j) == (row_index, col_index):
                                 self.set_style(f"bsunk{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)

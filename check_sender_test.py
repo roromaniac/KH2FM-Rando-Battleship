@@ -2,14 +2,15 @@ import time
 import random
 import os
 
-from rando_battleship import make_replacements_dict
-
 def inject_checks(starting_buffer=10,interval=10):
 
-    if os.path.exists('seenbosses.txt'):
-        os.remove("seenbosses.txt")
-    if os.path.exists('checks.txt'):
-        os.remove("checks.txt")
+    desktop = False
+    folder = "../../../../Desktop/battleship_rando/" if desktop else ""
+
+    if os.path.exists(folder + 'seenbosses.txt'):
+        os.remove(folder + "seenbosses.txt")
+    if os.path.exists(folder + 'checks.txt'):
+        os.remove(folder + "checks.txt")
 
     time.sleep(starting_buffer)
 
@@ -20,7 +21,7 @@ def inject_checks(starting_buffer=10,interval=10):
 
         check = random.choice(checks)
 
-        with open("seenbosses.txt", "a") as bosses:
+        with open(folder + "seenbosses.txt", "a") as bosses:
             
             bosses.write(check + '\n')
             checks.remove(check)
@@ -28,7 +29,7 @@ def inject_checks(starting_buffer=10,interval=10):
 
         check = random.choice(checks_found)    
         
-        with open("checks.txt", "a") as mark:
+        with open(folder + "checks.txt", "a") as mark:
             
             mark.write(check + '\n')
             checks_found.remove(check)
