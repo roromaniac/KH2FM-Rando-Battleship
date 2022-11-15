@@ -208,6 +208,8 @@ class BattleshipBoard():
         self.update_tracker_settings(self.autodetect)
         if self.autodetect:
             self.autotracking_timer()
+        else:
+            self.kill_autotracking_process()
 
 
     def on_closing(self):
@@ -894,6 +896,10 @@ class BattleshipBoard():
                 if (not self.mystery or self.checks_found[row_index, col_index] == 1 or self.checks_revealed[row_index, col_index] == 1):
                     self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                     self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
+                else:
+                    black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((new_width, new_height)))
+                    self.button_dict[(row_index, col_index)].configure(image = black_background)
+                    self.button_dict[(row_index, col_index)].image = black_background
 
 
     def display_edges(self, row_index, col_index):
@@ -951,6 +957,9 @@ class BattleshipBoard():
 
 
     def generate_card(self, row_size, col_size, seedname=None, mystery=False, maze=False, event=None):
+
+        if not self.autodetect:
+            self.kill_autotracking_process()
 
         # reset the autotracker
         if maze:
@@ -1024,9 +1033,9 @@ class BattleshipBoard():
                         self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="red", highlightthickness=10, padding=0)
                     elif (row_index, col_index) == (self.row_size - 1, self.col_size - 1):
                         self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#32CD32", highlightthickness=10, padding=0)
-                        padx = self.padding_dict[(row_index, col_index)][1], self.padding_dict[(row_index, col_index)][2]
-                        pady = self.padding_dict[(row_index, col_index)][0], self.padding_dict[(row_index, col_index)][3]
-                        self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes", padx=padx, pady=pady)
+                    padx = self.padding_dict[(row_index, col_index)][1], self.padding_dict[(row_index, col_index)][2]
+                    pady = self.padding_dict[(row_index, col_index)][0], self.padding_dict[(row_index, col_index)][3]
+                    self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes", padx=padx, pady=pady)
                 else:
                     self.button_dict[(row_index, col_index)].grid(row=row_index, column=col_index, sticky="nwes")
                 self.button_dict[(row_index, col_index)].configure(command = lambda row_index=row_index, col_index=col_index:
