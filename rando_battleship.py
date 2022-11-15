@@ -692,18 +692,24 @@ class BattleshipBoard():
                             continue
                         # reveal final fights if Xemnas is defeated
                         if new_check == "Xemnas":
-                            armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
-                            armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
-                            self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                            ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
-                            self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
-                            self.button_dict[armored_xem_1_key].image = ff_image_1
-                            self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
-                            self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                            ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
-                            self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
-                            self.button_dict[armored_xem_2_key].image = ff_image_2
-                            self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
+                            try:
+                                armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
+                                self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
+                                self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
+                                self.button_dict[armored_xem_1_key].image = ff_image_1
+                                self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
+                            except ValueError:
+                                pass
+                            try:
+                                armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
+                                self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
+                                self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
+                                self.button_dict[armored_xem_2_key].image = ff_image_2
+                                self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
+                            except ValueError:
+                                pass
                         # if a report is found and is a hint for bunter, change the tracker
                         try:
                             if new_check in self.hints.keys():
