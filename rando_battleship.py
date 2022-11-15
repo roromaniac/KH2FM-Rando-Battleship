@@ -670,7 +670,8 @@ class BattleshipBoard():
         if self.auto_detect_counter == 10:
             self.auto_detect_counter = 0
             if not self.detect_game():
-                self.autotracking_timer()
+                if self.autodetect:
+                    self.autotracking_timer()
                 return
 
         key_list = list(self.autotracking_labels.keys())
@@ -861,11 +862,6 @@ class BattleshipBoard():
         for process in psutil.process_iter():
             if process.name() in ["KINGDOM HEARTS II FINAL MIX.exe", "pcsx2.exe"]:
                 detection = True
-        if detection:
-            self.menubar.entryconfig(8, label = f'Autotracking!')
-        else:
-            self.menubar.entryconfig(8, label = f'Not tracking.')
-
         return detection
 
 
@@ -877,9 +873,11 @@ class BattleshipBoard():
         detection = self.detect_game()
 
         if detection:
+            self.menubar.entryconfig(8, label = f'Autotracking!')
             self.root.after(self.latency, self.autotracking)
         else:
             self.root.after(7500, self.autotracking_timer)
+            self.menubar.entryconfig(8, label = f'Not tracking.')
 
 
     def resize_image(self, event):
@@ -1236,8 +1234,8 @@ class BattleshipBoard():
                 if self.checks_found[row_index, col_index] == 0:
 
                     self.checks_found[row_index, col_index] = 1
-                    self.checks_revealed[row_index, col_index] = 1
                     if self.mystery:
+                        self.checks_revealed[row_index, col_index] = 1
                         directions, span = self.mystery[0], int(self.mystery[1])
                         current_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
                         current_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
