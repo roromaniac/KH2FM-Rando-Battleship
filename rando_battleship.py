@@ -891,7 +891,7 @@ class BattleshipBoard():
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
                 self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
-                if (not self.mystery or self.checks_found[row_index, col_index] == 1):
+                if (not self.mystery or self.checks_found[row_index, col_index] == 1 or self.checks_revealed[row_index, col_index] == 1):
                     self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                     self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
 
@@ -955,6 +955,8 @@ class BattleshipBoard():
         # reset the autotracker
         if maze:
             self.edges = self.generate_maze()
+        if mystery:
+            self.checks_revealed = np.zeros((row_size, col_size))
         self.armored_xemnas_hinted = False
         self.armored_xemnas_found = False
         self.armored_xemnas_seen = False
@@ -1225,10 +1227,11 @@ class BattleshipBoard():
                 if self.checks_found[row_index, col_index] == 0:
 
                     self.checks_found[row_index, col_index] = 1
+                    self.checks_revealed[row_index, col_index] = 1
                     if self.mystery:
                         directions, span = self.mystery[0], int(self.mystery[1])
-                        current_width = int(self.width / (self.col_size*self.scaling_factor))
-                        current_height = int(self.height / (self.row_size*self.scaling_factor))
+                        current_width = int(self.root.winfo_width() / (self.col_size*self.scaling_factor))
+                        current_height = int(self.root.winfo_height() / (self.row_size*self.scaling_factor))
                         self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((current_width, current_height)))
                         self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
                         self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
@@ -1241,6 +1244,7 @@ class BattleshipBoard():
                                 if row_index + vert_offset in range(0, self.row_size) and col_index + hori_offset in range(0, self.col_size):
                                     neighbor_row_index = row_index + vert_offset
                                     neighbor_col_index = col_index + hori_offset
+                                    self.checks_revealed[neighbor_row_index, neighbor_col_index] = 1
                                     self.image_dict[((neighbor_row_index, neighbor_col_index))] = ImageTk.PhotoImage(self.used_images[neighbor_row_index*self.col_size + neighbor_col_index].resize((current_width, current_height)))
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].configure(image = self.image_dict[((neighbor_row_index, neighbor_col_index))])
                                     self.button_dict[(neighbor_row_index, neighbor_col_index)].image = self.image_dict[((neighbor_row_index, neighbor_col_index))]
