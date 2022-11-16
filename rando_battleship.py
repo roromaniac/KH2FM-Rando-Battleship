@@ -1273,7 +1273,8 @@ class BattleshipBoard():
                             xs, ys = np.where(self.opponent_ships_with_ids == id)
                             if all([value == 1 for value in [self.checks_found[xs[i], ys[i]] for i in range(len(xs))]]):
                                 for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
-                                    self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                    border_color = ttk.Style().lookup(f"bloaded{index_x}{index_y}.TButton", 'bordercolor')
+                                    self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=border_color, highlightthickness=10, padding=0)
                                     sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
                                     sunk_foreground = Image.open("img/static/recusant_sigil.png").resize(sunk_background.size)
                                     current_width = int(self.width / (self.col_size*self.scaling_factor))
@@ -1283,7 +1284,6 @@ class BattleshipBoard():
                                     self.button_dict[(index_x, index_y)].configure(image = sunk_image, style=f"bsunk{index_x}{index_y}.TButton", command = lambda row_index=index_x, col_index=index_y:
                                                                                         self.change_button_color(self.marking_colors["Battleship Sink"], "black", row_index, col_index, current_border_color, placing_ship))
                                     self.button_dict[(index_x, index_y)].image = sunk_image
-                                # self.ships_left.remove(id)
 
                 # undo any bingos or sunk battleships if need be
                 else:
@@ -1310,14 +1310,15 @@ class BattleshipBoard():
 
                         # remove previous bingos and change their functionality
                         for (i, j) in bingo_squares_removed:
+                            border_color = ttk.Style().lookup(f"bloaded{index_x}{index_y}.TButton", 'bordercolor')
                             if (i,j) == (row_index, col_index):
-                                self.set_style(f"bbingo{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bbingo{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in bingo_squares_removed:
-                                self.set_style(f"bbingo{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bbingo{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color(self.marking_colors["Marking Color"], "black", row_index, col_index, current_border_color, placing_ship))
 
