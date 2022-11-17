@@ -1173,6 +1173,8 @@ class BattleshipBoard():
                 current_border_color = "blue"
             elif ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor") == "red" or ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor") == "#32CD32":
                 current_border_color = ttk.Style().lookup(f"bnormal{row_index}{col_index}.TButton", "bordercolor")
+            elif ttk.Style().lookup(f"bloaded{row_index}{col_index}.TButton", 'bordercolor') == "#22bb41":
+                current_border_color = "#22bb41"
             self.set_style(f"bnoted{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
             self.button_dict[(row_index, col_index)].configure(style=f"bnoted{row_index}{col_index}.TButton")
             # figure out what the previous background color was so if we uncheck it the right background shows
@@ -1220,9 +1222,10 @@ class BattleshipBoard():
                 self.place_ship(row_index, col_index)
 
             # change button color
-            self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
+            border_color = ttk.Style().lookup(f"bloaded{row_index}{col_index}.TButton", 'bordercolor')
+            self.set_style(f"bclicked{row_index}{col_index}.TButton", background=new_color, bordercolor=border_color, highlightthickness=10, padding=0)
             self.button_dict[(row_index, col_index)].configure(style=f"bclicked{row_index}{col_index}.TButton", command = lambda row_index=row_index, col_index=col_index:
-                                                                            self.change_button_color(new_color, current_color, row_index, col_index, current_border_color, placing_ship))
+                                                                            self.change_button_color(new_color, current_color, row_index, col_index, border_color, placing_ship))
 
             # reset the annotation behavior
             self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
@@ -1310,15 +1313,14 @@ class BattleshipBoard():
 
                         # remove previous bingos and change their functionality
                         for (i, j) in bingo_squares_removed:
-                            border_color = ttk.Style().lookup(f"bloaded{index_x}{index_y}.TButton", 'bordercolor')
                             if (i,j) == (row_index, col_index):
-                                self.set_style(f"bbingo{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bbingo{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", self.marking_colors["Marking Color"], row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in bingo_squares_removed:
-                                self.set_style(f"bbingo{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bbingo{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bclicked{i}{j}.TButton", background=self.marking_colors["Marking Color"], bordercolor=current_border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color(self.marking_colors["Marking Color"], "black", row_index, col_index, current_border_color, placing_ship))
 
@@ -1350,14 +1352,15 @@ class BattleshipBoard():
                             current_height = int(self.height / (self.row_size*self.scaling_factor))
                             self.used_images[i * self.col_size + j] = self.raw_images[i * self.col_size + j].resize((current_width, current_height))
                             old_reverted_image = ImageTk.PhotoImage(self.used_images[i * self.col_size + j])
+                            border_color = ttk.Style().lookup(f"bloaded{i}{j}.TButton", 'bordercolor')
                             if (i,j) == (row_index, col_index):
-                                self.set_style(f"bsunk{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bsunk{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bnormal{i}{j}.TButton", background="black", bordercolor=border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bnormal{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color("black", correct_revert_sunk_color, row_index, col_index, current_border_color, placing_ship))
                             if (i,j) != (row_index, col_index) and (i,j) in sunk_squares_removed:
-                                self.set_style(f"bsunk{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
-                                self.set_style(f"bclicked{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=current_border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bsunk{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=border_color, highlightthickness=10, padding=0)
+                                self.set_style(f"bclicked{i}{j}.TButton", background=correct_revert_sunk_color, bordercolor=border_color, highlightthickness=10, padding=0)
                                 self.button_dict[(i, j)].configure(image = old_reverted_image, style=f"bclicked{i}{j}.TButton", command = lambda row_index=i, col_index=j:
                                                                                     self.change_button_color(correct_revert_sunk_color, "black", row_index, col_index, current_border_color, placing_ship))
                             self.button_dict[(i, j)].image = old_reverted_image
