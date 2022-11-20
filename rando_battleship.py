@@ -979,7 +979,10 @@ class BattleshipBoard():
             if os.path.exists('checks.txt'):
                 os.remove('checks.txt')
         if hasattr(self, 'menubar'):
-            self.menubar.entryconfig(8, label = f'Not tracking.')
+            if not self.autodetect:
+                self.menubar.entryconfig(8, label = f'Not tracking.')
+            else:
+                self.autotracking_timer()
         self.checks_found = np.zeros((row_size, col_size))
         self.root.geometry(f"{self.width}x{self.height}")
         self.root.geometry(f"+{self.x}+{self.y}")
