@@ -1,5 +1,10 @@
-ships.zip
+# Directories
 /ships
+/build
+/dist
+
+# Individual Files
+ships.zip
 encrypt_replacements.py
 boss_enemy_bingo_seed.zip
 checks.txt
