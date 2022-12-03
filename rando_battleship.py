@@ -81,7 +81,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v2.0.0)")
+        self.root.title("Rando Battleship (v2.0.1)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -201,11 +201,12 @@ class BattleshipBoard():
 
     def set_fill(self):
         self.fill = not self.fill
-        self.update_tracker_settings(self.fill)
+        self.update_tracker_settings(self.fill, value="fill")
+
 
     def set_autodetect(self):
         self.autodetect = not self.autodetect
-        self.update_tracker_settings(self.autodetect)
+        self.update_tracker_settings(self.autodetect, value="autodetect")
         if self.autodetect:
             self.autotracking_timer()
         else:
@@ -214,7 +215,7 @@ class BattleshipBoard():
 
     def on_closing(self):
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
-        self.update_tracker_settings((self.x, self.y), position=True)
+        self.update_tracker_settings((self.x, self.y), value="pos")
         self.kill_autotracking_process()
         self.root.destroy()
 
@@ -224,7 +225,7 @@ class BattleshipBoard():
             self.icons = "sonic"
         elif self.icons == "sonic":
             self.icons = "televo"
-        self.update_tracker_settings(self.icons)
+        self.update_tracker_settings(self.icons, value="icons")
         self.generate_card(self.row_size, self.col_size, self.seedname)
 
 
@@ -287,7 +288,6 @@ class BattleshipBoard():
 
             labels[i] = ttk.Label(window, text = f"{directions[i - 1]}")
             labels[i].grid(row = i, column = 0)
-
             entries[i] = ttk.Checkbutton(window, cursor=None)
             entries[i].state(["!alternate"])
             if hasattr(self, 'directions'):
@@ -298,7 +298,6 @@ class BattleshipBoard():
                 entries[i].state(["selected"])
             entries[i].grid(row = i, column = 1)
 
-        
         labels[i+1] = ttk.Label(window, text = "Span")
         labels[i+1].grid(row = i + 1, column = 0)
         entries[i+1] = ttk.Entry(window, width = 5)
@@ -309,85 +308,17 @@ class BattleshipBoard():
         btn1.grid(row = i+2, column = 1)
 
     # for refactoring rewrite this into fewer lines
-    def update_tracker_settings(self, new_data, position=False, autodetect=False):
-        if type(new_data) == bool:
-            if autodetect:
-                with open("tracker_settings.txt", "w") as f:
-                    f.write(f"self.icons = '{self.icons}'\n")
-                    f.write(f"self.marking_colors = {self.marking_colors}\n")
-                    f.write(f"self.width = {self.width}\n")
-                    f.write(f"self.height = {self.height}\n")
-                    f.write(f"self.x = {self.x}\n")
-                    f.write(f"self.y = {self.y}\n")
-                    f.write(f"self.fill = {self.fill}\n")
-                    f.write(f"self.autodetect = {new_data}\n")
-                    f.write(f"self.directions = {self.directions}")
-            else:
-                with open("tracker_settings.txt", "w") as f:
-                    f.write(f"self.icons = '{self.icons}'\n")
-                    f.write(f"self.marking_colors = {self.marking_colors}\n")
-                    f.write(f"self.width = {self.width}\n")
-                    f.write(f"self.height = {self.height}\n")
-                    f.write(f"self.x = {self.x}\n")
-                    f.write(f"self.y = {self.y}\n")
-                    f.write(f"self.fill = {new_data}\n")
-                    f.write(f"self.autodetect = {self.autodetect}\n")
-                    f.write(f"self.directions = {self.directions}")
-        elif type(new_data) == str:
-            with open("tracker_settings.txt", "w") as f:
-                f.write(f"self.icons = '{new_data}'\n")
-                f.write(f"self.marking_colors = {self.marking_colors}\n")
-                f.write(f"self.width = {self.width}\n")
-                f.write(f"self.height = {self.height}\n")
-                f.write(f"self.x = {self.x}\n")
-                f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {self.fill}\n")
-                f.write(f"self.autodetect = {self.autodetect}\n")
-                f.write(f"self.directions = {self.directions}")
-        elif type(new_data) == dict:
-            with open("tracker_settings.txt", "w") as f:
-                f.write(f"self.icons = '{self.icons}'\n")
-                f.write(f"self.marking_colors = {new_data}\n")
-                f.write(f"self.width = {self.width}\n")
-                f.write(f"self.height = {self.height}\n")
-                f.write(f"self.x = {self.x}\n")
-                f.write(f"self.y = {self.y}\n")
-                f.write(f"self.fill = {self.fill}\n")
-                f.write(f"self.autodetect = {self.autodetect}\n")
-                f.write(f"self.directions = {self.directions}")
-        elif type(new_data) == tuple and all([type(x) == int for x in new_data]):
-            if position:
-                with open("tracker_settings.txt", "w") as f:
-                    f.write(f"self.icons = '{self.icons}'\n")
-                    f.write(f"self.marking_colors = {self.marking_colors}\n")
-                    f.write(f"self.width = {self.width}\n")
-                    f.write(f"self.height = {self.height}\n")
-                    f.write(f"self.x = {new_data[0]}\n")
-                    f.write(f"self.y = {new_data[1]}\n")
-                    f.write(f"self.fill = {self.fill}\n")
-                    f.write(f"self.autodetect = {self.autodetect}\n")
-                    f.write(f"self.directions = {self.directions}")
-            else:
-                with open("tracker_settings.txt", "w") as f:
-                    f.write(f"self.icons = '{self.icons}'\n")
-                    f.write(f"self.marking_colors = {self.marking_colors}\n")
-                    f.write(f"self.width = {new_data[0]}\n")
-                    f.write(f"self.height = {new_data[1]}\n")
-                    f.write(f"self.x = {self.x}\n")
-                    f.write(f"self.y = {self.y}\n")
-                    f.write(f"self.fill = {self.fill}\n")
-                    f.write(f"self.autodetect = {self.autodetect}\n")
-                    f.write(f"self.directions = {self.directions}")
-        elif type(new_data) == list:
-            f.write(f"self.icons = '{self.icons}'\n")
-            f.write(f"self.marking_colors = {self.marking_colors}\n")
-            f.write(f"self.width = {new_data[0]}\n")
-            f.write(f"self.height = {new_data[1]}\n")
-            f.write(f"self.x = {self.x}\n")
-            f.write(f"self.y = {self.y}\n")
-            f.write(f"self.fill = {self.fill}\n")
-            f.write(f"self.autodetect = {self.autodetect}\n")
-            f.write(f"self.directions = {new_data}")
+    def update_tracker_settings(self, new_data, value=None):
+        with open("tracker_settings.txt", "w") as f:
+            f.write(f"self.icons = '{new_data}'\n" if value == "icons" else f"self.icons = '{self.icons}'\n")
+            f.write(f"self.marking_colors = '{new_data}'\n" if value == "colors" else f"self.marking_colors = {self.marking_colors}\n")
+            f.write(f"self.width = '{new_data[0]}'\n" if value == "dim" else f"self.width = {self.width}\n")
+            f.write(f"self.height = '{new_data[1]}'\n" if value == "dim" else f"self.height = {self.height}\n")
+            f.write(f"self.x = '{new_data[0]}'\n" if value == "pos" else f"self.x = {self.x}\n")
+            f.write(f"self.y = '{new_data[1]}'\n" if value == "pos" else f"self.y = {self.y}\n")
+            f.write(f"self.fill = '{new_data}'\n" if value == "fill" else f"self.fill = {self.fill}\n")
+            f.write(f"self.autodetect = '{new_data}'\n" if value == "autodetect" else f"self.autodetect = {self.autodetect}\n")
+            f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}")
 
 
     def change_marking_colors(self, color_list = ["white"]):
@@ -418,7 +349,7 @@ class BattleshipBoard():
             if colors[1] is not None:
                 color_list[i - 1] = colors[1]
                 self.marking_colors[modes[i - 1]] = colors[1]
-                self.update_tracker_settings(self.marking_colors)
+                self.update_tracker_settings(self.marking_colors, value="colors")
             # write the color dict to tracker settings line 2
             window.destroy()
             self.change_marking_colors(color_list)
@@ -446,7 +377,7 @@ class BattleshipBoard():
 
     def restore_default_colors(self, window):
         self.marking_colors = {"Marking Color": "green", 'Annotating Color': '#FFAC1C', "Battleship Miss": "#0077be", "Battleship Hit": "red", "Battleship Sink": "pink", "Bingo (Bunter)": "purple"}
-        self.update_tracker_settings(self.marking_colors)
+        self.update_tracker_settings(self.marking_colors, value="colors")
         window.destroy()
         self.change_marking_colors([v for v in self.marking_colors.values()])
 
@@ -697,20 +628,22 @@ class BattleshipBoard():
                         if new_check == "Xemnas":
                             try:
                                 armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
-                                self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                                ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
-                                self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
-                                self.button_dict[armored_xem_1_key].image = ff_image_1
-                                self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
+                                if self.replacements["ArmoredXemnas1"] not in self.important_checks_recorded:
+                                    self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                    ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
+                                    self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
+                                    self.button_dict[armored_xem_1_key].image = ff_image_1
+                                    self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
                             except ValueError:
                                 pass
                             try:
                                 armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
-                                self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                                ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
-                                self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
-                                self.button_dict[armored_xem_2_key].image = ff_image_2
-                                self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
+                                if self.replacements["ArmoredXemnas2"] not in self.important_checks_recorded:
+                                    self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                    ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
+                                    self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
+                                    self.button_dict[armored_xem_2_key].image = ff_image_2
+                                    self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
                             except ValueError:
                                 pass
                         # if a report is found and is a hint for bunter, change the tracker
@@ -768,11 +701,7 @@ class BattleshipBoard():
                         except:
                             pass
                         # try to get the randomized boss instead of the vanilla boss
-                        try:
-                            new_check = self.replacements[new_check]
-                        # if the check isn't a randomizable boss, quit
-                        except KeyError:
-                            pass
+                        new_check = self.replacements.get(new_check, new_check)
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_check == "ArmoredXemnas"):
                         if self.armored_xemnas_found:
@@ -818,23 +747,15 @@ class BattleshipBoard():
                     continue
                 try:
                     self.seen_bosses_recorded.append(new_boss)
+
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
-
-                        # in boss enemy we don't want to track Future Pete
-                        if new_boss == "Pete":
-                            continue
                         # try to get the randomized boss instead of the vanilla boss
-                        try:
-                            new_boss = self.replacements[new_boss]
-                        # if the check isn't a randomizable boss, quit
-                        except KeyError:
-                            pass
+                        new_boss = self.replacements.get(new_boss, new_boss)
+
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_boss == "ArmoredXemnas"):
-                        if self.armored_xemnas_seen or self.armored_xemnas_found:
-                            continue
-                        else:
+                        if not self.armored_xemnas_seen and not self.armored_xemnas_found:
                             self.armored_xemnas_seen = True
                     # track only first armored xem in vanilla battleships
                     if (new_boss == "ArmoredXemnas1"):
@@ -884,9 +805,9 @@ class BattleshipBoard():
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
         new_width = int(self.width / (self.col_size*self.scaling_factor))
         new_height = int(self.height / (self.row_size*self.scaling_factor))
-        self.update_tracker_settings((self.width, self.height))
+        self.update_tracker_settings((self.width, self.height), value="dim")
         self.x, self.y = self.root.winfo_x(), self.root.winfo_y()
-        self.update_tracker_settings((self.x, self.y), position=True)
+        self.update_tracker_settings((self.x, self.y), value="pos")
         self.image_dict = {}
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
@@ -1019,7 +940,14 @@ class BattleshipBoard():
             Grid.rowconfigure(self.frame, row_index, weight=1)
             for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
+                # reset all existing styles (important if player generates a new card in the same window session)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bbossfound{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bloaded{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bnoted{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bbingo{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bsunk{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"blcicked{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 if not mystery:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                     if maze:
@@ -1495,27 +1423,12 @@ class BattleshipBoard():
         TitleLabel = ttk.Label(window, text = "Include?")
         TitleLabel.grid(row = 0, column = 1)
 
-        check_type_labels = ["Reports", 
-                             "Lvl 1 Magic", 
-                             "Lvl 2 Magic", 
-                             "Lvl 3 Magic", 
-                             "Lvl 1 Movement", 
-                             "Lvl 2 Movement", 
-                             "Lvl 3 Movement", 
-                             "Lvl 4 Movement", 
-                             "Story Bosses", 
-                             "Second Chance/Once More", 
-                             "Drive Forms", 
-                             "Torn Pages", 
-                             "Summons", 
-                             "Proofs", 
-                             "World Progression Icons",
-                             "Promise Charm",
-                             "Extra Checks",
-                             "Armored Xemnas",
-                             "Absent Silhouettes",
-                             "Sephiroth",
-                             "Lingering Will"] 
+        check_type_labels = ["Reports", "Lvl 1 Magic", "Lvl 2 Magic", "Lvl 3 Magic", 
+                             "Lvl 1 Movement", "Lvl 2 Movement", "Lvl 3 Movement", "Lvl 4 Movement", "Story Bosses", 
+                             "Second Chance/Once More", "Drive Forms", "Torn Pages", "Summons", "Proofs", 
+                             "World Progression Icons", "Promise Charm", "Extra Checks", "Armored Xemnas",
+                             "Absent Silhouettes", "Sephiroth", "Lingering Will"
+        ] 
 
         labels = {}
         entries = {}
@@ -1848,11 +1761,8 @@ def make_replacements_dict():
             return ("ERROR", replacements_dict)
         for replacement in blacklisted_pairs:
             k, v = replacement
-            try:
-                if replacements_dict[k] == v:
-                    return ("ERROR", replacements_dict)
-            except KeyError:
-                pass
+            if replacements_dict.get(k) == v:
+                return ("ERROR", replacements_dict)
 
     return replacements_dict
 
