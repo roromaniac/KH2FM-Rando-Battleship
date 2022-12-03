@@ -111,7 +111,7 @@ class BattleshipBoard():
                 for line in previous:
                     exec(line)
 
-        self.generate_card(self.row_size, self.col_size)
+        self.generate_card(self.row_size, self.col_size, maze=self.maze, mystery=self.mystery)
 
         # Creating Menubar
         self.menubar = Menu(self.root)
@@ -812,13 +812,14 @@ class BattleshipBoard():
         for row_index in range(self.row_size):
             for col_index in range(self.col_size):
                 self.image_dict[(row_index, col_index)] = ImageTk.PhotoImage(self.used_images[row_index*self.col_size + col_index].resize((new_width, new_height)))
-                if (not self.mystery or self.checks_found[row_index, col_index] == 1 or self.checks_revealed[row_index, col_index] == 1):
-                    self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
-                    self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
-                else:
-                    black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((new_width, new_height)))
-                    self.button_dict[(row_index, col_index)].configure(image = black_background)
-                    self.button_dict[(row_index, col_index)].image = black_background
+                if not self.blind:
+                    if (not self.mystery or self.checks_found[row_index, col_index] == 1 or self.checks_revealed[row_index, col_index] == 1):
+                        self.button_dict[(row_index, col_index)].configure(image = self.image_dict[(row_index, col_index)])
+                        self.button_dict[(row_index, col_index)].image = self.image_dict[(row_index, col_index)]
+                    else:
+                        black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((new_width, new_height)))
+                        self.button_dict[(row_index, col_index)].configure(image = black_background)
+                        self.button_dict[(row_index, col_index)].image = black_background
 
 
     def display_edges(self, row_index, col_index):
@@ -1364,7 +1365,7 @@ class BattleshipBoard():
             for col_index in range(col_size):
                 Grid.columnconfigure(self.frame, col_index, weight=1)
                 self.set_style(f"bnormal{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=1, padding=0)
-                if blind:
+                if self.blind:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
                 else:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*col_size + col_index], style=f"bnormal{row_index}{col_index}.TButton", takefocus=False, command=lambda x=row_index, y=col_index: self.change_button_color("black", "blue", x, y, "#333333", True)) #create a button inside frame 
@@ -1566,7 +1567,10 @@ class BattleshipBoard():
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
-                settings_file.write(f"self.bingo = {self.bingo}")
+                settings_file.write(f"self.bingo = {self.bingo}\n")
+                settings_file.write(f"self.maze = {self.maze}\n")
+                settings_file.write(f"self.mystery = {self.mystery}")
+
         else:
             with open("settings.txt", "w") as settings_file:
                 if hasattr(self, 'selected_checks'):
@@ -1578,7 +1582,9 @@ class BattleshipBoard():
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
-                settings_file.write(f"self.bingo = {self.bingo}")
+                settings_file.write(f"self.bingo = {self.bingo}\n")
+                settings_file.write(f"self.maze = {self.maze}\n")
+                settings_file.write(f"self.mystery = {self.mystery}")
         
         subprocess.Popen(r'explorer /open,"."')
     
