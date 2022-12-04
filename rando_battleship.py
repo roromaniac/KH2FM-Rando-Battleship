@@ -1601,7 +1601,7 @@ class BattleshipBoard():
                     exec(line)
                     last_settings.write(line)
         self.set_seedname(self.seedname)
-        self.generate_card(self.row_size, self.col_size, self.seedname)
+        self.generate_card(self.row_size, self.col_size, self.seedname, mystery=self.mystery, maze=self.maze)
 
     
     def load_bunter_seed(self):

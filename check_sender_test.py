@@ -4,7 +4,7 @@ import os
 
 def inject_checks(starting_buffer=10,interval=10):
 
-    desktop = False
+    desktop = True
     folder = "../../../../Desktop/battleship_rando/" if desktop else ""
 
     if os.path.exists(folder + 'seenbosses.txt'):
@@ -14,8 +14,8 @@ def inject_checks(starting_buffer=10,interval=10):
 
     time.sleep(starting_buffer)
 
-    checks = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast']
-    checks_found = ['Report1', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast']
+    checks = ['Report8']#, 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast']
+    checks_found = ['Report8']#, 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast']
 
     while len(checks) != 0:
 
