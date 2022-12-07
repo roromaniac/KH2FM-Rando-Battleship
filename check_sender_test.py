@@ -4,7 +4,7 @@ import os
 
 def inject_checks(starting_buffer=10,interval=10):
 
-    desktop = True
+    desktop = False
     folder = "../../../../Desktop/battleship_rando/" if desktop else ""
 
     if os.path.exists(folder + 'seenbosses.txt'):

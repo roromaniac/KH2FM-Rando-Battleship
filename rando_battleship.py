@@ -751,6 +751,11 @@ class BattleshipBoard():
 
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
+
+                        # in boss enemy we don't want to track Future Pete
+                        if new_boss == "Pete":
+                            continue
+
                         # try to get the randomized boss instead of the vanilla boss
                         new_boss = self.replacements.get(new_boss, new_boss)
 
@@ -1737,37 +1742,14 @@ class BattleshipBoard():
 
 def make_replacements_dict():
 
-    if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
-
-        with open('enemyspoilers/enemyspoilers.txt') as spoiler_file:
-            replacements = spoiler_file.readlines()
-
-        replacements = replacements[:(replacements.index('\n'))]
-
-        # only care about the lines with actual replacements
-        replacements = [x for x in replacements if 'became' in x]
-
-        # filter relevant replacements and remove unnecessary whitespace
-        replacements = [replacement.strip() for replacement in replacements if ("Cups" not in replacement)]
-
-        # make the json dict of replacements
-        replacements_dict = {}
-        for replacement in replacements:
-            entry = replacement.split('became')
-            entry[0] = entry[0].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
-            entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
-            replacements_dict[entry[0]] = entry[1]
-
-    else:
-
-        with open('enemies.rando', 'rb') as enemiesrandofile:
-            replacements = enemiesrandofile.read()
-        replacements = ast.literal_eval(base64.b64decode(replacements).decode('ascii'))["BOSSES"]
-        replacements_dict = {}
-        for replacement in replacements:
-            original_boss = replacement['original'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
-            new_boss = replacement['new'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
-            replacements_dict[original_boss] = new_boss
+    with open('enemies.rando', 'rb') as enemiesrandofile:
+        replacements = enemiesrandofile.read()
+    replacements = ast.literal_eval(base64.b64decode(replacements).decode('ascii'))["BOSSES"]
+    replacements_dict = {}
+    for replacement in replacements:
+        original_boss = replacement['original'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
+        new_boss = replacement['new'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
+        replacements_dict[original_boss] = new_boss
 
     blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
     if "Luxord became Luxord (Data)" in replacements:
