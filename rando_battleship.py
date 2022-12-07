@@ -723,8 +723,7 @@ class BattleshipBoard():
                             self.set_style(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", background = ttk.Style().lookup(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'background'), bordercolor=ttk.Style().lookup(f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton", 'bordercolor'), highlightthickness=10, padding=0)
                             self.button_dict[self.last_found_check].configure(style=f"bbingo{self.last_found_check[0]}{self.last_found_check[1]}.TButton")                            
                 except ValueError:
-                    if new_check != "Checks Collected":
-                        print(f"The check {new_check} is not in the pool.")
+                    pass
             try:
                 if ttk.Style().lookup(f"bbingo{button_key[0]}{button_key[1]}.TButton", 'background') != self.marking_colors["Bingo (Bunter)"]:
                     self.set_style(f"bmostrecentlyfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bclicked{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor="yellow", highlightthickness=50, padding=0)
@@ -770,8 +769,7 @@ class BattleshipBoard():
                     self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
                     self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
                 except ValueError:
-                    if new_boss != "Bosses Seen":
-                        print(f"The not yet beaten boss {new_boss} is not in the pool.")
+                    pass
     
         self.root.after(self.latency, self.autotracking)
         
@@ -1616,14 +1614,12 @@ class BattleshipBoard():
         # remove enemyspoilers before next load AT ALL COSTS
         try:
             filename = fd.askopenfilename()
-
             # get bunter hints if possible
             subprocess.call([os.path.join('autotracker', 'BunterHints', 'BunterHints.exe'), f'{filename}'], shell=True)
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
             os.remove('hints.txt')
-
             os.mkdir('enemyspoilers')
             shutil.unpack_archive(filename, './enemyspoilers', 'zip')
             self.replacements = make_replacements_dict()
@@ -1741,8 +1737,7 @@ class BattleshipBoard():
             print(f"Ships look good!")
 
 def make_replacements_dict():
-
-    with open('enemies.rando', 'rb') as enemiesrandofile:
+    with open('enemyspoilers/enemies.rando', 'rb') as enemiesrandofile:
         replacements = enemiesrandofile.read()
     replacements = ast.literal_eval(base64.b64decode(replacements).decode('ascii'))["BOSSES"]
     replacements_dict = {}
