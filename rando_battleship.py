@@ -793,7 +793,7 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe')
+        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe', shell=True)
 
         detection = self.detect_game()
 
