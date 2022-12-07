@@ -9,6 +9,7 @@ import json
 import itertools as it
 import ast
 import psutil
+import base64
 
 from tkinter import *
 from tkinter import ttk
@@ -1620,13 +1621,8 @@ class BattleshipBoard():
 
             os.mkdir('enemyspoilers')
             shutil.unpack_archive(filename, './enemyspoilers', 'zip')
-            if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
-                self.replacements = make_replacements_dict()
-                shutil.rmtree('enemyspoilers')
-            else:
-                shutil.rmtree('enemyspoilers')
-                replacements = subprocess.check_output([os.path.join('autotracker', 'encrypt_replacements.exe'), f'{filename}'], shell=True)
-                self.replacements = ast.literal_eval(replacements.decode('utf-8'))
+            self.replacements = make_replacements_dict()
+            shutil.rmtree('enemyspoilers')
             window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
             if type(self.replacements) == tuple:
@@ -1716,7 +1712,7 @@ class BattleshipBoard():
                         break
                 except IndexError:
                     pass
-   
+
         # add feature for validating types
         if hasattr(self, 'restrictions'):
             xs, ys = np.where(ship_layout_with_ids >= 1)
@@ -1743,8 +1739,8 @@ def make_replacements_dict():
 
     if 'enemyspoilers.txt' in os.listdir('enemyspoilers'):
 
-        spoiler_file = open('enemyspoilers/enemyspoilers.txt')
-        replacements = spoiler_file.readlines()
+        with open('enemyspoilers/enemyspoilers.txt') as spoiler_file:
+            replacements = spoiler_file.readlines()
 
         replacements = replacements[:(replacements.index('\n'))]
 
@@ -1761,14 +1757,25 @@ def make_replacements_dict():
             entry[0] = entry[0].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
             entry[1] = entry[1].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # invoke TR future pete for OC pete for boss enemy seeds, # finding either armored Xemnas should invoke the button
             replacements_dict[entry[0]] = entry[1]
-        spoiler_file.close()
-        blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
-        if "Luxord became Luxord (Data)" in replacements:
+
+    else:
+
+        with open('enemies.rando', 'rb') as enemiesrandofile:
+            replacements = enemiesrandofile.read()
+        replacements = ast.literal_eval(base64.b64decode(replacements).decode('ascii'))["BOSSES"]
+        replacements_dict = {}
+        for replacement in replacements:
+            original_boss = replacement['original'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
+            new_boss = replacement['new'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
+            replacements_dict[original_boss] = new_boss
+
+    blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
+    if "Luxord became Luxord (Data)" in replacements:
+        return ("ERROR", replacements_dict)
+    for replacement in blacklisted_pairs:
+        k, v = replacement
+        if replacements_dict.get(k) == v:
             return ("ERROR", replacements_dict)
-        for replacement in blacklisted_pairs:
-            k, v = replacement
-            if replacements_dict.get(k) == v:
-                return ("ERROR", replacements_dict)
 
     return replacements_dict
 
