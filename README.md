@@ -55,8 +55,9 @@ All bosses and checks are autotracked. Only 1 exception exists.
 ### Battleship Format Creator
 * Ryujin
 
-### Icon Developer
+### Icon Developers
 * Televo
+* Sonicshadowsilver2
 
 ### Dev Consultants
 

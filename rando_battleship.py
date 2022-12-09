@@ -630,7 +630,7 @@ class BattleshipBoard():
                             try:
                                 armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
                                 if self.replacements["ArmoredXemnas1"] not in self.important_checks_recorded:
-                                    self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                    self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
                                     ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
                                     self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
                                     self.button_dict[armored_xem_1_key].image = ff_image_1
@@ -793,7 +793,7 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        self.autotracking_process = subprocess.Popen('autotracker/BattleshipTrackerLogic.exe', shell=True)
+        self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'BattleshipTrackerLogic.exe'), shell=True)
 
         detection = self.detect_game()
 
@@ -1619,6 +1619,7 @@ class BattleshipBoard():
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
+
             os.remove('hints.txt')
             os.mkdir('enemyspoilers')
             shutil.unpack_archive(filename, './enemyspoilers', 'zip')
