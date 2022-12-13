@@ -3,3 +3,5 @@ self.valid_checks = [False, False, False, False, False, False, True, False, True
 self.row_size, self.col_size = 5, 5
 self.ship_sizes = [5, 4, 3, 3, 2]
 self.bingo = True
+self.width = 926
+self.height = 863

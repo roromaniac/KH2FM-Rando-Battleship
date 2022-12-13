@@ -4,3 +4,5 @@ self.restrictions = {'report': 13, 'magic1': 6, 'magic2': 6, 'magic3': 6, 'movem
 self.row_size, self.col_size = 10, 10
 self.ship_sizes = [2, 2, 3, 3, 3, 4, 4, 5]
 self.bingo = False
+self.width = 708
+self.height = 711

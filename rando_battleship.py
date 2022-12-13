@@ -320,6 +320,13 @@ class BattleshipBoard():
             f.write(f"self.fill = '{new_data}'\n" if value == "fill" else f"self.fill = {self.fill}\n")
             f.write(f"self.autodetect = '{new_data}'\n" if value == "autodetect" else f"self.autodetect = {self.autodetect}\n")
             f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}")
+        if hasattr(self, "preset_name") and value == "dim":
+            with open(self.preset_name, "r") as p:
+                preset_content = p.readlines()
+            preset_content[-2] = f"self.width = {new_data[0]}\n"
+            preset_content[-1] = f"self.height = {new_data[1]}"
+            with open(self.preset_name, "w") as p:
+                p.writelines(preset_content)
 
 
     def change_marking_colors(self, color_list = ["white"]):
@@ -629,22 +636,20 @@ class BattleshipBoard():
                         if new_check == "Xemnas":
                             try:
                                 armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
-                                if self.replacements["ArmoredXemnas1"] not in self.important_checks_recorded:
-                                    self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
-                                    ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
-                                    self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
-                                    self.button_dict[armored_xem_1_key].image = ff_image_1
-                                    self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
+                                self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
+                                ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
+                                self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
+                                self.button_dict[armored_xem_1_key].image = ff_image_1
+                                self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
                             except ValueError:
                                 pass
                             try:
                                 armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
-                                if self.replacements["ArmoredXemnas2"] not in self.important_checks_recorded:
-                                    self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                                    ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
-                                    self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
-                                    self.button_dict[armored_xem_2_key].image = ff_image_2
-                                    self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
+                                self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                                ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
+                                self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
+                                self.button_dict[armored_xem_2_key].image = ff_image_2
+                                self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
                             except ValueError:
                                 pass
                         # if a report is found and is a hint for bunter, change the tracker
@@ -654,7 +659,7 @@ class BattleshipBoard():
                                     orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
                                 else:
                                     orig_boss, replacement_boss = self.hints[new_check].split("became")
-                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
+                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2") # make the armored xems vanilla for when they eventually track
                                 replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
                                 # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
@@ -793,7 +798,7 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'BattleshipTrackerLogic.exe'), shell=True)
+        self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'BattleshipTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
 
         detection = self.detect_game()
 
@@ -1596,6 +1601,7 @@ class BattleshipBoard():
     def load_settings(self, preset=False):
         if preset:
             settings_filename = fd.askopenfilename(initialdir="presets")
+            self.preset_name = settings_filename
         else:
             settings_filename = fd.askopenfilename()
         with open("previous_preset.txt", "w") as last_settings:
