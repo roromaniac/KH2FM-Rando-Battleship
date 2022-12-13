@@ -765,7 +765,9 @@ class BattleshipBoard():
 
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_boss == "ArmoredXemnas"):
-                        if not self.armored_xemnas_seen and not self.armored_xemnas_found:
+                        if self.armored_xemnas_found:
+                            continue
+                        if not self.armored_xemnas_seen:
                             self.armored_xemnas_seen = True
                     # track only first armored xem in vanilla battleships
                     if (new_boss == "ArmoredXemnas1"):
@@ -900,6 +902,7 @@ class BattleshipBoard():
         self.armored_xemnas_seen = False
         self.important_checks_recorded = []
         self.seen_bosses_recorded = []
+        # remove previous "last" check
         if os.path.exists('checks.txt'):
             os.remove('checks.txt')
         if os.path.exists('seenbosses.txt'):
@@ -957,7 +960,8 @@ class BattleshipBoard():
                 self.set_style(f"bnoted{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.set_style(f"bbingo{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 self.set_style(f"bsunk{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
-                self.set_style(f"blcicked{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bclicked{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
+                self.set_style(f"bmostrecentlyfound{row_index}{col_index}.TButton", background="black", bordercolor="#333333", highlightthickness=10, padding=0)
                 if not mystery:
                     self.button_dict[(row_index, col_index)] = ttk.Button(self.frame, image = self.images[row_index*self.col_size + col_index], takefocus=False, style=f'bnormal{row_index}{col_index}.TButton')
                     if maze:
@@ -1307,7 +1311,7 @@ class BattleshipBoard():
                             self.button_dict[(i, j)].image = old_reverted_image
 
     def copy_seed(self, event=None):
-        subprocess.run("clip", universal_newlines=True, input=f"({self.row_size}, {self.col_size}, '{self.seedname}')")
+        subprocess.run("clip", universal_newlines=True, input=f"{self.seedname}")
 
 
     def open_help_window(self, event=None):
