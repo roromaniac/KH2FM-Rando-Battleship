@@ -1758,7 +1758,7 @@ def make_replacements_dict():
         replacements_dict[original_boss] = new_boss
 
     blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
-    if "Luxord became Luxord (Data)" in replacements:
+    if {'original': 'Luxord', 'new': 'Luxord (Data)'} in replacements:
         return ("ERROR", replacements_dict)
     for replacement in blacklisted_pairs:
         k, v = replacement
