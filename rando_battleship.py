@@ -125,7 +125,7 @@ class BattleshipBoard():
         board_mode.add_command(label='Place Mode (Blind)', underline=5, command=lambda: self.place_mode(self.row_size, self.col_size, blind=True), accelerator="Ctrl+B")
         board_mode.add_command(label='Place Mode (Visible)', command=lambda : self.place_mode(self.row_size, self.col_size, blind=False), accelerator="Ctrl+V")
         board_mode.add_command(label='Same Board Mode', command=lambda: self.upload_ship_layout(True), accelerator="Ctrl+S")
-        board_mode.add_command(label='Clear Placements', command=lambda: self.place_mode(self.row_size, self.col_size, blind=self.blind), accelerator="Ctrl+C")
+        board_mode.add_command(label='Clear Placements', command=lambda: self.place_mode(self.row_size, self.col_size, blind=self.blind), accelerator="Ctrl+Z")
         self.menubar.add_cascade(label ='Placement', menu=board_mode)
 
 
@@ -154,8 +154,10 @@ class BattleshipBoard():
         customize.add_command(label = 'Change Ship Sizes', command=self.ship_setter_window)
         customize.add_command(label = 'Toggle Checks', command=self.check_inclusion_window)
         customize.add_command(label = 'Set Ship Restrictions', command=self.check_restriction_window)
-        mystery_check = IntVar(value = self.mystery)
-        customize.add_checkbutton(label = 'Mystery Mode', onvalue=1, offvalue=0, command=self.change_mystery_mode, variable=mystery_check)
+        bingo_check = IntVar(value = self.bingo)
+        customize.add_checkbutton(label = 'Bingo Mode', onvalue=1, offvalue=0, command=self.set_bingo, variable=bingo_check)
+        self.mystery_check = IntVar(value = self.mystery)
+        customize.add_checkbutton(label = 'Mystery Mode', onvalue=1, offvalue=0, command=self.change_mystery_mode, variable=self.mystery_check)
         maze_check = IntVar(value = self.maze)
         customize.add_checkbutton(label = 'Maze Mode', onvalue=1, offvalue=0, command=self.generate_maze_card, variable=maze_check)
         customize.add_command(label = 'Spoil Card', command=self.reveal_card)
@@ -175,6 +177,8 @@ class BattleshipBoard():
         visuals.add_command(label = 'Change Icon Style', command=self.set_icon_style)
         fill_checked = IntVar(value = self.fill)
         visuals.add_checkbutton(label = 'Hint Box Filled', onvalue=1, offvalue=0, command=self.set_fill, variable=fill_checked)
+        custom_checked = IntVar(value = self.custom_images)
+        visuals.add_checkbutton(label = 'Use Custom Images', onvalue=1, offvalue=0, command=self.include_custom_images, variable=custom_checked) #, command=self.set_fill, variable=fill_checked)
         self.menubar.add_cascade(label = "Visuals", menu=visuals)
 
 
@@ -185,13 +189,15 @@ class BattleshipBoard():
 
 
         # Seedname Display
-        self.menubar.add_cascade(label = f'Seedname: {self.seedname}')
+        self.menubar.add_cascade(label = f'Seedname: {self.seedname}', command=self.copy_seed)
 
 
         # Autotracking Display
         self.menubar.add_cascade(label = f"Not tracking.")
-        
 
+        # Autotracking Display
+        self.menubar.add_cascade(label = f" ")
+        
         self.root.config(menu=self.menubar)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.iconbitmap("img/static/battleships.ico")
@@ -221,6 +227,11 @@ class BattleshipBoard():
         self.root.destroy()
 
 
+    def set_bingo(self):
+        self.bingo = not self.bingo
+        self.generate_card(self.row_size, self.col_size, self.seedname)
+
+
     def set_icon_style(self):
         if self.icons == "televo":
             self.icons = "sonic"
@@ -243,6 +254,17 @@ class BattleshipBoard():
             self.generate_card(self.row_size, self.col_size, self.seedname)
 
 
+    def include_custom_images(self):
+        self.custom_images = not self.custom_images
+        self.update_tracker_settings(self.custom_images, value="custom")
+
+    
+    def has_custom(self, image_name):
+        if self.custom_images and image_name in os.listdir('img/custom'):
+            return True
+        return False
+
+
     def reveal_card(self):
         self.width, self.height = self.root.winfo_width(), self.root.winfo_height()
         current_width = int(self.width / (self.col_size*self.scaling_factor))
@@ -256,6 +278,8 @@ class BattleshipBoard():
 
     def set_fog_of_war(self, entries, window):
 
+        # user hit "Apply and Generate New Card" with mystery directions so we can check the option in the Customize menu
+        self.mystery_check.set(1)
         directions = ["N", "E", "W", "S", "NE", "NW", "SW", "SE"]
         # directions and span
         self.mystery = [directions[i] for i in range(len(entries) - 1) if entries[i + 1].instate(["selected"])], entries[len(entries)].get()
@@ -269,6 +293,9 @@ class BattleshipBoard():
 
 
     def change_mystery_mode(self):
+
+        # since we have a popup menu, don't check mystery mode since the user may X out of it and remain in non-mystery mode
+        self.mystery_check.set(0)
 
         if self.mystery:
             self.mystery = False
@@ -308,7 +335,7 @@ class BattleshipBoard():
         btn1 = ttk.Button(window, text = "Apply and Generate New Card", command = lambda: self.set_fog_of_war(entries, window))
         btn1.grid(row = i+2, column = 1)
 
-    # for refactoring rewrite this into fewer lines
+
     def update_tracker_settings(self, new_data, value=None):
         with open("tracker_settings.txt", "w") as f:
             f.write(f"self.icons = '{new_data}'\n" if value == "icons" else f"self.icons = '{self.icons}'\n")
@@ -318,6 +345,7 @@ class BattleshipBoard():
             f.write(f"self.x = '{new_data[0]}'\n" if value == "pos" else f"self.x = {self.x}\n")
             f.write(f"self.y = '{new_data[1]}'\n" if value == "pos" else f"self.y = {self.y}\n")
             f.write(f"self.fill = '{new_data}'\n" if value == "fill" else f"self.fill = {self.fill}\n")
+            f.write(f"self.custom_images = '{new_data}'\n" if value == "custom" else f"self.custom_images = {self.custom_images}\n")
             f.write(f"self.autodetect = '{new_data}'\n" if value == "autodetect" else f"self.autodetect = {self.autodetect}\n")
             f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}")
         if hasattr(self, "preset_name") and value == "dim":
@@ -515,7 +543,7 @@ class BattleshipBoard():
         return placed_ships
 
 
-    def download_ship_layout(self, key = b'7RiMHser-GrCxgcWMJ0HoOxjF_Sww5_RORHnyH-Dp50=', event=None):
+    def download_ship_layout(self, event=None, key = b'7RiMHser-GrCxgcWMJ0HoOxjF_Sww5_RORHnyH-Dp50='):
         try:
             os.makedirs('ships')
         except FileExistsError:
@@ -654,21 +682,22 @@ class BattleshipBoard():
                                 pass
                         # if a report is found and is a hint for bunter, change the tracker
                         try:
+                            # this could be placed in its own function but it doesn't change functionality too much
                             if new_check in self.hints.keys():
                                 if "unchanged" in self.hints[new_check]:
                                     orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
                                 else:
                                     orig_boss, replacement_boss = self.hints[new_check].split("became")
-                                orig_boss = orig_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
-                                replacement_boss = replacement_boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas") # make the armored xems vanilla for when they eventually track
+                                orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
+                                replacement_boss = boss_str_reformat(orig_boss, 'replacement', images = True)
                                 # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
                                 current_width = int(self.width / (self.col_size*self.scaling_factor))
                                 current_height = int(self.height / (self.row_size*self.scaling_factor))
-                                main_boss_photo = Image.open(f'img/{self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
+                                main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(replacement_boss + ".webp") else self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
                                 background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
                                 paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
-                                arena_boss_photo = Image.open(f"img/{self.icons}/{orig_boss}.webp").convert('RGBA')
+                                arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(orig_boss + ".webp") else self.icons}/{orig_boss}.webp').convert('RGBA')
                                 arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
                                 if self.fill:
                                     arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
@@ -684,7 +713,7 @@ class BattleshipBoard():
                                         # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
                                         background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
                                         background.save('temp.png')
-                                        old_arena_boss_photo = Image.open(f"img/{self.icons}/{self.first_boss_hint}.webp").convert('RGBA')
+                                        old_arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.first_boss_hint + ".webp") else self.icons}/{self.first_boss_hint}.webp').convert('RGBA')
                                         old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
                                         if self.fill:
                                             old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
@@ -800,7 +829,12 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'BattleshipTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
+        if hasattr(self, 'preset_name') and self.preset_name == "hitlist.txt":
+            # run hitlist autotracker instead of vanilla
+            self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'HitlistAutotracker', 'HitlistTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
+        else:
+            # run normal autotracker
+            self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'Autotracker', 'BattleshipTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
 
         detection = self.detect_game()
 
@@ -831,6 +865,12 @@ class BattleshipBoard():
                         black_background = ImageTk.PhotoImage(Image.open('img/static/black.png').resize((new_width, new_height)))
                         self.button_dict[(row_index, col_index)].configure(image = black_background)
                         self.button_dict[(row_index, col_index)].image = black_background
+        with open("previous_preset.txt", "w") as preset_size_save:
+            preset_size_save.write(f"self.valid_checks = {self.valid_checks}\n")
+            preset_size_save.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
+            preset_size_save.write(f"self.bingo = {self.bingo}\n")
+            preset_size_save.write(f"self.width = {self.width}\n")
+            preset_size_save.write(f"self.height = {self.height}")
 
 
     def display_edges(self, row_index, col_index):
@@ -902,7 +942,7 @@ class BattleshipBoard():
         self.armored_xemnas_seen = False
         self.important_checks_recorded = []
         self.seen_bosses_recorded = []
-        # remove previous "last" check
+        # remove previous recorded checks and seen bosses
         if os.path.exists('checks.txt'):
             os.remove('checks.txt')
         if os.path.exists('seenbosses.txt'):
@@ -923,7 +963,7 @@ class BattleshipBoard():
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
 
-        # battleship settings (images and sizes) and randomization
+        # get the appropraite checks
         if seedname is None:
             if hasattr(self, 'menubar'):
                 self.set_seedname(''.join(random.choice(string.ascii_letters) for _ in range(6)))
@@ -932,8 +972,12 @@ class BattleshipBoard():
         self.check_names = [x for x in os.listdir(f"img/{self.icons}")]
         if hasattr(self, 'valid_checks'):
             self.check_names = [x for (x, include) in zip(self.check_names, self.valid_checks) if include]
+
+        # set the randomization based on seedname
         random.Random(self.seedname).shuffle(self.check_names)
-        self.raw_images = [Image.open(f"img/{self.icons}/{check}").resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
+        
+        # setup images
+        self.raw_images = [Image.open(f'img/{"custom" if self.has_custom(check) else self.icons}/{check}').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
         self.used_images = deepcopy(self.raw_images)
         self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
@@ -995,7 +1039,7 @@ class BattleshipBoard():
                 popup.iconbitmap("img/static/warning.ico")
                 popup.wm_title("WARNING!")
                 popup.geometry("347x70")
-                # self.root.update_idletasks()
+                self.root.update_idletasks()
                 popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
                 popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
                 label = ttk.Label(popup, text='Warning: Bingo board must be square. Bingo logic will not work.')
@@ -1044,10 +1088,10 @@ class BattleshipBoard():
         for square in squares:
             horizontal_coords = []
             vertical_coords = []
-            left_neighbor_coord = square[0] - 1
-            right_neighbor_coord = square[0] + 1
-            up_neighbor_coord = square[1] - 1
-            down_neighbor_coord = square[1] + 1
+            left_neighbor_coord = square[1] - 1
+            right_neighbor_coord = square[1] + 1
+            up_neighbor_coord = square[0] - 1
+            down_neighbor_coord = square[0] + 1
             self.padding_dict[square] = [0, 0, 0, 0] #nwes format
             if square[0] == 0:
                 self.padding_dict[square][0] = 6
@@ -1058,13 +1102,13 @@ class BattleshipBoard():
             if square[1] == self.col_size - 1:
                 self.padding_dict[square][2] = 6 
             if left_neighbor_coord >= 0:
-                horizontal_coords.append((left_neighbor_coord, square[1]))
+                horizontal_coords.append((square[0], left_neighbor_coord))
             if right_neighbor_coord < self.col_size:
-                horizontal_coords.append((right_neighbor_coord, square[1]))
+                horizontal_coords.append((square[0], right_neighbor_coord))
             if up_neighbor_coord >= 0 :
-                vertical_coords.append((square[0], up_neighbor_coord))
+                vertical_coords.append((up_neighbor_coord, square[1]))
             if down_neighbor_coord < self.row_size:
-                vertical_coords.append((square[0], down_neighbor_coord))
+                vertical_coords.append((down_neighbor_coord, square[1]))
             neighbors = horizontal_coords + vertical_coords
             edges = edges.union(set([min([(square, x), (x, square)], key = lambda k: (k[0], k[1])) for x in neighbors]))
             self.neighbor_dict[square] = neighbors
@@ -1223,7 +1267,7 @@ class BattleshipBoard():
                                 for index_x, index_y in [[xs[i], ys[i]] for i in range(len(xs))]:
                                     border_color = ttk.Style().lookup(f"bloaded{index_x}{index_y}.TButton", 'bordercolor')
                                     self.set_style(f"bsunk{index_x}{index_y}.TButton", background=self.marking_colors["Battleship Sink"], bordercolor=border_color, highlightthickness=10, padding=0)
-                                    sunk_background = Image.open(f'img/{self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
+                                    sunk_background = Image.open(f'img/{"custom" if self.has_custom(self.check_names[self.col_size * index_x + index_y] + ".webp") else self.icons}/{self.check_names[self.col_size * index_x + index_y]}')
                                     sunk_foreground = Image.open("img/static/recusant_sigil.png").resize(sunk_background.size)
                                     current_width = int(self.width / (self.col_size*self.scaling_factor))
                                     current_height = int(self.height / (self.row_size*self.scaling_factor))
@@ -1660,6 +1704,7 @@ class BattleshipBoard():
                 label.pack(side="top", fill="x", pady=10)
                 B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
                 B1.pack()
+            self.menubar.entryconfig(9, label="B/E is ON")
 
         except:
             if os.path.exists('enemyspoilers'):
@@ -1753,8 +1798,8 @@ def make_replacements_dict():
     replacements = ast.literal_eval(base64.b64decode(replacements).decode('ascii'))["BOSSES"]
     replacements_dict = {}
     for replacement in replacements:
-        original_boss = replacement['original'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
-        new_boss = replacement['new'].strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
+        original_boss = boss_str_reformat(replacement['original'], 'original')
+        new_boss = boss_str_reformat(replacement['new'], 'replacement')
         replacements_dict[original_boss] = new_boss
 
     blacklisted_pairs = [("Scar", "Beast"), ("GrimReaper2", "Hades"), ("GrimReaper2", "BlizzardLord"), ("GrimReaper2", "VolcanoLord"), ("GrimReaper2", "Beast"), ("GrimReaper1", "Axel2"), ("ArmoredXemnas1", "Demyx"), ("ArmoredXemnas2", "Demyx"), ("VolcanoLord", "TwilightThorn"), ("BlizzardLord", "TwilightThorn"), ("BlizzardLord", "Xigbar"), ("VolcanoLord", "Xigbar"), ("Beast", "Xigbar"), ("VolcanoLord", "Roxas"), ("BlizzardLord", "Roxas")]
@@ -1766,6 +1811,12 @@ def make_replacements_dict():
             return ("ERROR", replacements_dict)
 
     return replacements_dict
+
+def boss_str_reformat(boss, boss_type, images=False):
+    if not images and boss_type == "original":
+        return boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
+    return boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
+
 
 if __name__ == '__main__':
     BattleshipBoard() 

@@ -84,3 +84,4 @@ All bosses and checks are autotracked. Only 1 exception exists.
 * Kayya
 * Ragnoth
 * DoubleADewi
+* AkaShortStack

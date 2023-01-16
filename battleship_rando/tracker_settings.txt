@@ -5,5 +5,6 @@ self.height = 711
 self.x = '201'
 self.y = '149'
 self.fill = False
+self.custom_images = False
 self.autodetect = True
 self.directions = [True, True, True, True, False, False, False, False]
