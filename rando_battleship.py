@@ -349,11 +349,11 @@ class BattleshipBoard():
             f.write(f"self.autodetect = '{new_data}'\n" if value == "autodetect" else f"self.autodetect = {self.autodetect}\n")
             f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}")
         if hasattr(self, "preset_name") and value == "dim":
-            with open(self.preset_name, "r") as p:
+            with open(f"presets/{self.preset_name}", "r") as p:
                 preset_content = p.readlines()
             preset_content[-2] = f"self.width = {new_data[0]}\n"
             preset_content[-1] = f"self.height = {new_data[1]}"
-            with open(self.preset_name, "w") as p:
+            with open(f"presets/{self.preset_name}", "w") as p:
                 p.writelines(preset_content)
 
 
@@ -829,10 +829,8 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        print(self.preset_name)
-        if hasattr(self, 'preset_name') and self.preset_name.split('/')[-1] == "hitlist.txt":
+        if hasattr(self, 'preset_name') and self.preset_name == "hitlist.txt":
             # run hitlist autotracker instead of vanilla
-            print("FINALLY USING THE RIGHT TRAKCER")
             self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'HitlistAutotracker', 'HitlistTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
         else:
             # run normal autotracker
@@ -872,7 +870,8 @@ class BattleshipBoard():
             preset_size_save.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
             preset_size_save.write(f"self.bingo = {self.bingo}\n")
             preset_size_save.write(f"self.width = {self.width}\n")
-            preset_size_save.write(f"self.height = {self.height}")
+            preset_size_save.write(f"self.height = {self.height}\n")
+            preset_size_save.write(f"self.preset_name = '{self.preset_name}'")
 
 
     def display_edges(self, row_index, col_index):
@@ -1651,7 +1650,7 @@ class BattleshipBoard():
     def load_settings(self, preset=False):
         if preset:
             settings_filename = fd.askopenfilename(initialdir="presets")
-            self.preset_name = settings_filename
+            self.preset_name = settings_filename.split('/')[-1]
         else:
             settings_filename = fd.askopenfilename()
         with open("previous_preset.txt", "w") as last_settings:
@@ -1660,6 +1659,7 @@ class BattleshipBoard():
                 for line in settings:
                     exec(line)
                     last_settings.write(line)
+            last_settings.write(f"self.preset_name = '{self.preset_name}'")
         self.set_seedname(self.seedname)
         self.generate_card(self.row_size, self.col_size, self.seedname, mystery=self.mystery, maze=self.maze)
 
