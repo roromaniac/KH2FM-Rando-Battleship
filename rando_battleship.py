@@ -829,8 +829,10 @@ class BattleshipBoard():
     def autotracking_timer(self):
 
         self.kill_autotracking_process()
-        if hasattr(self, 'preset_name') and self.preset_name == "hitlist.txt":
+        print(self.preset_name)
+        if hasattr(self, 'preset_name') and self.preset_name.split('/')[-1] == "hitlist.txt":
             # run hitlist autotracker instead of vanilla
+            print("FINALLY USING THE RIGHT TRAKCER")
             self.autotracking_process = subprocess.Popen(os.path.join('autotracker', 'HitlistAutotracker', 'HitlistTrackerLogic.exe'), creationflags = subprocess.CREATE_NO_WINDOW)
         else:
             # run normal autotracker
