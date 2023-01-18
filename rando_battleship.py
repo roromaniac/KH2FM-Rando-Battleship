@@ -979,6 +979,8 @@ class BattleshipBoard():
         
         # setup images
         self.raw_images = [Image.open(f'img/{"custom" if self.has_custom(check) else self.icons}/{check}').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
+        if self.preset_name == "hitlist.txt" and "Axel2.webp" in self.check_names:
+            self.raw_images[self.check_names.index("Axel2.webp")] = Image.open('img/static/Axel2.webp')
         self.used_images = deepcopy(self.raw_images)
         self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
