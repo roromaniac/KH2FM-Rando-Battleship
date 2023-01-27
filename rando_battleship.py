@@ -51,6 +51,7 @@ class BattleshipBoard():
                                 'movement3', 
                                 'movement4', 
                                 'story_boss', 
+                                'cups_fight',
                                 'sc/om',  
                                 'form',
                                 'tornpage',
@@ -60,6 +61,7 @@ class BattleshipBoard():
                                 'promise',
                                 'extra', 
                                 'armored_xemnas', 
+                                'final_xemnas',
                                 'as',        
                                 'sephiroth', 
                                 'terra'
@@ -868,7 +870,8 @@ class BattleshipBoard():
         with open("previous_preset.txt", "w") as preset_size_save:
             preset_size_save.write(f"self.valid_checks = {self.valid_checks}\n")
             preset_size_save.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
-            preset_size_save.write(f"self.bingo = {self.bingo}\n")
+            if self.bingo:
+                preset_size_save.write(f"self.bingo = {self.bingo}\n")
             preset_size_save.write(f"self.width = {self.width}\n")
             preset_size_save.write(f"self.height = {self.height}\n")
             preset_size_save.write(f"self.preset_name = '{self.preset_name}'")
@@ -981,6 +984,8 @@ class BattleshipBoard():
         self.raw_images = [Image.open(f'img/{"custom" if self.has_custom(check) else self.icons}/{check}').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
         if self.preset_name == "hitlist.txt" and "Axel2.webp" in self.check_names:
             self.raw_images[self.check_names.index("Axel2.webp")] = Image.open('img/static/Axel2.webp')
+        if self.preset_name == "boss_enemy_bingo.txt" and "ArmoredXemnas1.webp" in self.check_names:
+            self.raw_images[self.check_names.index("ArmoredXemnas1.webp")] = Image.open('img/static/ArmoredXemnas1.webp')
         self.used_images = deepcopy(self.raw_images)
         self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
@@ -1033,6 +1038,10 @@ class BattleshipBoard():
                 self.button_dict[(row_index, col_index)].bind('<Button-3>', lambda event, row_index=row_index, col_index=col_index:
                                                                         self.change_button_color("black", self.marking_colors["Annotating Color"], row_index, col_index, "red" if maze and (row_index, col_index) == (0, 0) else "#32CD32" if maze and (row_index, col_index) == (self.row_size - 1, self.col_size - 1) else "#333333", False, right_clicked=True))
                 self.autotracking_labels[(row_index, col_index)] = self.check_names[row_index*self.col_size + col_index][:-5]
+        
+        self.frame.bind("<Configure>", self.resize_image)
+        self.root.bind("<FocusIn>", self.resize_image)
+        self.root.bind("<FocusOut>", self.resize_image)
 
         # setup bingo logic if bingo and board is square
         if self.bingo:
@@ -1463,6 +1472,9 @@ class BattleshipBoard():
 
 
     def set_checks(self, entries, window, gen_card=True):
+        self.frame.bind("<Configure>", lambda event: None)
+        self.root.bind("<FocusIn>", lambda event: None)
+        self.root.bind("<FocusOut>", lambda event: None)
         self.check_names = [x for x in os.listdir(f"img/{self.icons}")]
         with open("img.json", "r") as checktypes_json:
             checktypes_dict = json.load(checktypes_json)
@@ -1486,8 +1498,8 @@ class BattleshipBoard():
 
         check_type_labels = ["Reports", "Lvl 1 Magic", "Lvl 2 Magic", "Lvl 3 Magic", 
                              "Lvl 1 Movement", "Lvl 2 Movement", "Lvl 3 Movement", "Lvl 4 Movement", "Story Bosses", 
-                             "Second Chance/Once More", "Drive Forms", "Torn Pages", "Summons", "Proofs", 
-                             "World Progression Icons", "Promise Charm", "Extra Checks", "Armored Xemnas",
+                             "Cups Fights", "Second Chance/Once More", "Drive Forms", "Torn Pages", "Summons", "Proofs", 
+                             "World Progression Icons", "Promise Charm", "Extra Checks", "Armored Xemnas", "Final Xemnas",
                              "Absent Silhouettes", "Sephiroth", "Lingering Will"
         ] 
 
@@ -1518,7 +1530,7 @@ class BattleshipBoard():
 
     def set_restrictions(self, entries, window, reset=False):
         if reset:
-            restriction_values = [13, 6, 6, 6, 5, 5, 5, 5, 33, 2, 5, 5, 4, 3, 11, 5]
+            restriction_values = [13, 6, 6, 6, 5, 5, 5, 5, 41, 4, 2, 5, 5, 4, 3, 11, 5]
         else:
             restriction_values = [int(entries[i].get()) for i in range(1, len(entries.keys()) + 1)]
         quantitative_check_labels = [
@@ -1531,6 +1543,7 @@ class BattleshipBoard():
             'movement3', 
             'movement4', 
             'story_boss', 
+            'cups_fight',
             'sc/om',  
             'form',
             'tornpage',
@@ -1565,6 +1578,7 @@ class BattleshipBoard():
                                           "Lvl 3 Movement", 
                                           "Lvl 4 Movement", 
                                           "Story Bosses", 
+                                          "Cups Fights",
                                           "Second Chance/Once More", 
                                           "Drive Forms", 
                                           "Torn Pages", 
@@ -1583,14 +1597,15 @@ class BattleshipBoard():
             5: 5,
             6: 5,
             7: 5,
-            8: 33,
-            9: 2,
-            10: 5,
+            8: 40,
+            9: 5,
+            10: 2,
             11: 5,
-            12: 4,
-            13: 3,
-            14: 11,
-            15: 5,
+            12: 5,
+            13: 4,
+            14: 3,
+            15: 11,
+            16: 5,
         }
 
         for i in range(1, len(quantitative_check_type_labels) + 1):
@@ -1627,7 +1642,8 @@ class BattleshipBoard():
                     settings_file.write(f"self.restrictions = {self.restrictions}\n")
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
-                settings_file.write(f"self.bingo = {self.bingo}\n")
+                if self.bingo:
+                    settings_file.write(f"self.bingo = {self.bingo}\n")
                 settings_file.write(f"self.maze = {self.maze}\n")
                 settings_file.write(f"self.mystery = {self.mystery}")
 
@@ -1642,7 +1658,8 @@ class BattleshipBoard():
                 settings_file.write(f"self.row_size, self.col_size = {self.row_size}, {self.col_size}\n")
                 settings_file.write(f"self.seedname = '{self.seedname}'\n")
                 settings_file.write(f"self.ship_sizes = {self.ship_sizes}\n")
-                settings_file.write(f"self.bingo = {self.bingo}\n")
+                if self.bingo:
+                    settings_file.write(f"self.bingo = {self.bingo}\n")
                 settings_file.write(f"self.maze = {self.maze}\n")
                 settings_file.write(f"self.mystery = {self.mystery}")
         
@@ -1817,10 +1834,10 @@ def make_replacements_dict():
     return replacements_dict
 
 def boss_str_reformat(boss, boss_type, images=False):
-    if not images and boss_type == "original":
-        return boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2")
-    return boss.strip().replace(" (1)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("PeteOC", "Pete").replace("ArmorXemnas1", "ArmoredXemnas").replace("ArmorXemnas2", "ArmoredXemnas")
-
+    boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "")
+    if images or boss_type != "original":
+        return boss.replace("PeteOC", "Pete")
+    return boss
 
 if __name__ == '__main__':
     BattleshipBoard() 

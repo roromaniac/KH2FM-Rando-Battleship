@@ -1,6 +1,6 @@
-self.valid_checks = [True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, True, True, True, True]
-self.row_size, self.col_size = 1, 8
-self.bingo = False
-self.width = 1078
-self.height = 78
-self.preset_name = 'hitlist.txt'
+self.valid_checks = [False, False, False, False, False, False, True, True, False, True, True, True, False, True, False, False, False, False, True, True, True, False, False, False, False, True, True, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, True, True, False, True, True, True, False, False, False, False, True, True, False, False, True, False, True, True, True, False, True, True, False, False, False, True, False, True, False, False, False, True, False, False, True, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, False, True, True, True, True, True, False, False, True, True, False, False, False, True, False, False, False, False, False, False, True, False, False, True, True, True, False, True, True, True, False, True, True]
+self.row_size, self.col_size = 7, 7
+self.bingo = True
+self.width = 776
+self.height = 756
+self.preset_name = 'new_boss_enemy_bingo.txt'

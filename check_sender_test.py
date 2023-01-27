@@ -17,8 +17,8 @@ def inject_checks(starting_buffer=10,interval=10):
     # checks = ['Report8', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast', 'ArmoredXemnas1', 'ArmoredXemnas2', 'DarkThorn', 'ShanYu']
     # checks_found = ['Report8', 'Report2', 'Report12', 'Report13', 'Sark', 'Pete', 'Scar', 'Barbossa', 'Saix', 'Vexen', 'Xemnas', 'Experiment', 'Marluxia', 'Axel2', 'Cerberus', 'Demyx', 'Larxene', 'PrisonKeeper', 'Axel1', 'Roxas', 'Hades', 'Thresholder', 'Beast', 'ArmoredXemnas1', 'ArmoredXemnas2', 'DarkThorn', 'ShanYu']
 
-    checks = ['Roxas', '7drives', 'Demyx', 'YTB', 'LingeringWill', 'Axel2', 'Xaldin', 'Vexen', 'Saix', 'Xigbar', 'Larxene', 'Marluxia', 'Luxord', 'Zexion', 'Sephiroth', 'Lexaeus']
-    checks_found = ['Roxas', '7drives', 'Demyx', 'YTB', 'LingeringWill', 'Axel2', 'Xaldin', 'Vexen', 'Saix', 'Xigbar', 'Larxene', 'Marluxia', 'Luxord', 'Zexion', 'Sephiroth', 'Lexaeus']
+    checks = ['Hercules', 'Tifa', 'Vivi', 'Seifer', 'Setzer', 'Hayner', 'FinalXemnas', 'Cloud', 'ShadowStalker', 'Riku', 'Leon', 'Yuffie']
+    checks_found = ['Hercules', 'Tifa', 'Vivi', 'Seifer', 'Setzer', 'Hayner', 'FinalXemnas', 'Cloud', 'ShadowStalker', 'Riku', 'Leon', 'Yuffie']
 
     while len(checks) != 0:
 
