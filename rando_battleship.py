@@ -659,9 +659,12 @@ class BattleshipBoard():
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
 
-                        # in boss enemy we don't want to track Future Pete
-                        if new_check == "Pete":
+                        # in (original) boss enemy we don't want to track Future Pete
+                        if new_check == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
                             continue
+                        # in (original) boss enemy we don't want to track Armored Xemnas 2
+                        if new_check == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
+                            new_check = "ArmoredXemnas1"
                         # reveal final fights if Xemnas is defeated
                         if new_check == "Xemnas":
                             try:
@@ -691,7 +694,7 @@ class BattleshipBoard():
                                 else:
                                     orig_boss, replacement_boss = self.hints[new_check].split("became")
                                 orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
-                                replacement_boss = boss_str_reformat(orig_boss, 'replacement', images = True)
+                                replacement_boss = boss_str_reformat(replacement_boss, 'replacement', images = True)
                                 # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
                                 hint_button_key = key_list[val_list.index(replacement_boss)]
                                 current_width = int(self.width / (self.col_size*self.scaling_factor))
@@ -710,7 +713,7 @@ class BattleshipBoard():
                                 border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
                                 background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
                                 arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
-                                if replacement_boss == "ArmoredXemnas":
+                                if replacement_boss == "ArmoredXemnas1":
                                     if self.armored_xemnas_hinted:
                                         # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
                                         background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
@@ -740,14 +743,11 @@ class BattleshipBoard():
                         # try to get the randomized boss instead of the vanilla boss
                         new_check = self.replacements.get(new_check, new_check)
                     # don't want to invoke armored xemnas twice to go back to unmarked
-                    if (new_check == "ArmoredXemnas"):
+                    if (new_check == "ArmoredXemnas1"):
                         if self.armored_xemnas_found:
                             continue
                         else:
                             self.armored_xemnas_found = True
-                    # track only first armored xem in vanilla battleships
-                    if (new_check == "ArmoredXemnas1"):
-                        new_check == "ArmoredXemnas"
                     # invoke button
                     button_key = key_list[val_list.index(new_check)]
                     self.button_dict[button_key].invoke()
@@ -787,22 +787,22 @@ class BattleshipBoard():
                     # if boss enemy has been invoked...
                     if hasattr(self, 'replacements'):
 
-                        # in boss enemy we don't want to track Future Pete
-                        if new_boss == "Pete":
+                        # in (original) boss enemy we don't want to track Future Pete
+                        if new_boss == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
                             continue
+                        # in (original) boss enemy we don't want to track Armored Xemnas 2
+                        if new_boss == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
+                            new_boss = "ArmoredXemnas1"
 
                         # try to get the randomized boss instead of the vanilla boss
                         new_boss = self.replacements.get(new_boss, new_boss)
 
                     # don't want to invoke armored xemnas twice to go back to unmarked
-                    if (new_boss == "ArmoredXemnas"):
+                    if (new_boss == "ArmoredXemnas1"):
                         if self.armored_xemnas_found:
                             continue
                         if not self.armored_xemnas_seen:
                             self.armored_xemnas_seen = True
-                    # track only first armored xem in vanilla battleships
-                    if (new_boss == "ArmoredXemnas1"):
-                        new_boss == "ArmoredXemnas"
                     button_key = key_list[val_list.index(new_boss)]
                     self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
                     self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
@@ -1836,7 +1836,7 @@ def make_replacements_dict():
 def boss_str_reformat(boss, boss_type, images=False):
     boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "")
     if images or boss_type != "original":
-        return boss.replace("PeteOC", "Pete")
+        return boss.replace("PeteOC", "Pete").replace("PeteTR", "Pete")
     return boss
 
 if __name__ == '__main__':

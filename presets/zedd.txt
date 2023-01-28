@@ -1,6 +1,6 @@
+self.selected_checks = [False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, True, True, True]
 self.valid_checks = [False, False, False, False, False, False, True, True, False, True, True, True, False, False, False, False, False, False, True, True, True, False, False, False, False, True, True, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, True, True, False, True, True, True, False, False, False, False, True, True, False, False, False, False, True, True, True, False, True, True, False, False, False, True, False, False, False, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, False, True, True, True, False, True, False, False, True, True, False, False, False, True, False, False, False, False, False, False, True, False, False, True, True, True, False, True, True, True, False, True, True]
 self.row_size, self.col_size = 5, 5
 self.bingo = True
 self.width = 776
 self.height = 756
-self.preset_name = 'zedd.txt'
