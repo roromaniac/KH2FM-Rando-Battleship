@@ -1694,6 +1694,7 @@ class BattleshipBoard():
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
+            print(self.hints)
 
             os.remove('hints.txt')
             os.mkdir('enemyspoilers')
