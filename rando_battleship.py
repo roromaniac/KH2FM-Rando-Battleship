@@ -1694,7 +1694,6 @@ class BattleshipBoard():
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
-            print(self.hints)
 
             os.remove('hints.txt')
             os.mkdir('enemyspoilers')
@@ -1835,7 +1834,7 @@ def make_replacements_dict():
     return replacements_dict
 
 def boss_str_reformat(boss, boss_type, images=False):
-    boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "")
+    boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "").replace("(Cups)", "")
     if images or boss_type != "original":
         return boss.replace("PeteOC", "Pete").replace("PeteTR", "Pete")
     return boss
