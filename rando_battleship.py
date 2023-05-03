@@ -1699,6 +1699,7 @@ class BattleshipBoard():
             os.mkdir('enemyspoilers')
             shutil.unpack_archive(filename, './enemyspoilers', 'zip')
             self.replacements = make_replacements_dict()
+            print(self.replacements)
             shutil.rmtree('enemyspoilers')
             window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
             popup = Tk()
@@ -1834,7 +1835,7 @@ def make_replacements_dict():
     return replacements_dict
 
 def boss_str_reformat(boss, boss_type, images=False):
-    boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "").replace("(Cups)", "")
+    boss = boss.strip().replace(" (1)", "").replace(" (2)", "").replace(" (3)", "").replace("Terra", "LingeringWill").replace("Axel (Data)", "Axel2").replace("II", "2").replace("I", "1").replace(" ", "").replace("-", "").replace("OC2", "OC").replace("(Data)", "").replace("Hades2", "Hades").replace("Past", "Old").replace("The", "").replace("ArmorXemnas1", "ArmoredXemnas1").replace("ArmorXemnas2", "ArmoredXemnas2").replace("Escape", "").replace("(Cups)", "").replace("Hades1", "Hades")
     if images or boss_type != "original":
         return boss.replace("PeteOC", "Pete").replace("PeteTR", "Pete")
     return boss
