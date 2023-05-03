@@ -84,7 +84,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v2.0.2)")
+        self.root.title("Rando Battleship (v2.0.2F)")
 
         # board is initially visible so set blind to false
         self.blind = False
