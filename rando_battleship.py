@@ -742,6 +742,10 @@ class BattleshipBoard():
                             pass
                         # try to get the randomized boss instead of the vanilla boss
                         new_check = self.replacements.get(new_check, new_check)
+                    # if boss enemy isn't invoked, PeteTR is the real Pete
+                    else:
+                        if new_check == "PeteTR":
+                            new_check = "Pete"
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_check == "ArmoredXemnas1"):
                         if self.armored_xemnas_found:
@@ -796,6 +800,11 @@ class BattleshipBoard():
 
                         # try to get the randomized boss instead of the vanilla boss
                         new_boss = self.replacements.get(new_boss, new_boss)
+
+                    # if boss enemy isn't invoked, PeteTR is the real Pete
+                    else:
+                        if new_check == "PeteTR":
+                            new_check = "Pete"
 
                     # don't want to invoke armored xemnas twice to go back to unmarked
                     if (new_boss == "ArmoredXemnas1"):
