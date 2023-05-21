@@ -654,105 +654,105 @@ class BattleshipBoard():
             new_checks = list(set(important_checks_found) - set(self.important_checks_recorded))
             # invoke the appropriate button
             for new_check in new_checks:
-                try:
-                    self.important_checks_recorded.append(new_check)
-                    # if boss enemy has been invoked...
-                    if hasattr(self, 'replacements'):
+                self.important_checks_recorded.append(new_check)
+                # if boss enemy has been invoked...
+                if hasattr(self, 'replacements'):
 
-                        # in (original) boss enemy we don't want to track Future Pete
-                        if new_check == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
-                            continue
-                        # in (original) boss enemy we don't want to track Armored Xemnas 2
-                        if new_check == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
-                            new_check = "ArmoredXemnas1"
-                        # reveal final fights if Xemnas is defeated
-                        if new_check == "Xemnas":
-                            try:
-                                armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
-                                self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
-                                ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
-                                self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
-                                self.button_dict[armored_xem_1_key].image = ff_image_1
-                                self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
-                            except ValueError:
-                                pass
-                            try:
-                                armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
-                                self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                                ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
-                                self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
-                                self.button_dict[armored_xem_2_key].image = ff_image_2
-                                self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
-                            except ValueError:
-                                pass
-                        # if a report is found and is a hint for bunter, change the tracker
+                    # in (original) boss enemy we don't want to track Future Pete
+                    if new_check == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
+                        continue
+                    # in (original) boss enemy we don't want to track Armored Xemnas 2
+                    if new_check == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
+                        new_check = "ArmoredXemnas1"
+                    # reveal final fights if Xemnas is defeated
+                    if new_check == "Xemnas":
                         try:
-                            # this could be placed in its own function but it doesn't change functionality too much
-                            if new_check in self.hints.keys():
-                                if "unchanged" in self.hints[new_check]:
-                                    orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
-                                else:
-                                    orig_boss, replacement_boss = self.hints[new_check].split("became")
-                                orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
-                                replacement_boss = boss_str_reformat(replacement_boss, 'replacement', images = True)
-                                # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
-                                hint_button_key = key_list[val_list.index(replacement_boss)]
-                                current_width = int(self.width / (self.col_size*self.scaling_factor))
-                                current_height = int(self.height / (self.row_size*self.scaling_factor))
-                                main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(replacement_boss + ".webp") else self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
-                                background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
-                                paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
-                                arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(orig_boss + ".webp") else self.icons}/{orig_boss}.webp').convert('RGBA')
-                                arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
-                                if self.fill:
-                                    arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
-                                    arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
-                                    arena_boss_photo = arena_white_background
-                                index_x, index_y = hint_button_key[0], hint_button_key[1]
-                                hinted_border_color = "white"
-                                border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
-                                background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
-                                arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
-                                if replacement_boss == "ArmoredXemnas1":
-                                    if self.armored_xemnas_hinted:
-                                        # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
-                                        background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
-                                        background.save('temp.png')
-                                        old_arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.first_boss_hint + ".webp") else self.icons}/{self.first_boss_hint}.webp').convert('RGBA')
-                                        old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
-                                        if self.fill:
-                                            old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
-                                            old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
-                                            old_arena_boss_photo = old_arena_white_background
-                                        old_arena_boss_photo = ImageOps.expand(old_arena_boss_photo, border=border, fill=hinted_border_color)
-                                        background = Image.open('temp.png')
-                                        background.paste(old_arena_boss_photo, (paste_x * 19 // 10, 0), mask = old_arena_boss_photo)
-                                        os.remove('temp.png')
-                                    else:
-                                        self.armored_xemnas_hinted = True
-                                        self.first_boss_hint = orig_boss
-                                        background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
-                                else:
-                                    background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
-                                self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
-                                hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
-                                self.button_dict[(index_x, index_y)].configure(image = hinted_image)
-                                self.button_dict[(index_x, index_y)].image = hinted_image
-                        except:
+                            armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
+                            self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
+                            ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
+                            self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
+                            self.button_dict[armored_xem_1_key].image = ff_image_1
+                            self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
+                        except ValueError:
                             pass
-                        # try to get the randomized boss instead of the vanilla boss
-                        new_check = self.replacements.get(new_check, new_check)
-                    # if boss enemy isn't invoked, PeteTR is the real Pete
+                        try:
+                            armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
+                            self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
+                            ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
+                            self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
+                            self.button_dict[armored_xem_2_key].image = ff_image_2
+                            self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
+                        except ValueError:
+                            pass
+                    # if a report is found and is a hint for bunter, change the tracker
+                    try:
+                        # this could be placed in its own function but it doesn't change functionality too much
+                        if new_check in self.hints.keys():
+                            if "unchanged" in self.hints[new_check]:
+                                orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
+                            else:
+                                orig_boss, replacement_boss = self.hints[new_check].split("became")
+                            orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
+                            replacement_boss = boss_str_reformat(replacement_boss, 'replacement', images = True)
+                            # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
+                            hint_button_key = key_list[val_list.index(replacement_boss)]
+                            current_width = int(self.width / (self.col_size*self.scaling_factor))
+                            current_height = int(self.height / (self.row_size*self.scaling_factor))
+                            main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(replacement_boss + ".webp") else self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
+                            background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
+                            paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
+                            arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(orig_boss + ".webp") else self.icons}/{orig_boss}.webp').convert('RGBA')
+                            arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
+                            if self.fill:
+                                arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
+                                arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
+                                arena_boss_photo = arena_white_background
+                            index_x, index_y = hint_button_key[0], hint_button_key[1]
+                            hinted_border_color = "white"
+                            border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
+                            background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
+                            arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                            if replacement_boss == "ArmoredXemnas1":
+                                if self.armored_xemnas_hinted:
+                                    # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
+                                    background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
+                                    background.save('temp.png')
+                                    old_arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.first_boss_hint + ".webp") else self.icons}/{self.first_boss_hint}.webp').convert('RGBA')
+                                    old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
+                                    if self.fill:
+                                        old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
+                                        old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
+                                        old_arena_boss_photo = old_arena_white_background
+                                    old_arena_boss_photo = ImageOps.expand(old_arena_boss_photo, border=border, fill=hinted_border_color)
+                                    background = Image.open('temp.png')
+                                    background.paste(old_arena_boss_photo, (paste_x * 19 // 10, 0), mask = old_arena_boss_photo)
+                                    os.remove('temp.png')
+                                else:
+                                    self.armored_xemnas_hinted = True
+                                    self.first_boss_hint = orig_boss
+                                    background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
+                            else:
+                                background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
+                            self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
+                            hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
+                            self.button_dict[(index_x, index_y)].configure(image = hinted_image)
+                            self.button_dict[(index_x, index_y)].image = hinted_image
+                    except:
+                        pass
+                    # try to get the randomized boss instead of the vanilla boss
+                    new_check = self.replacements.get(new_check, new_check)
+                # if boss enemy isn't invoked, PeteTR is the real Pete
+                else:
+                    if new_check == "PeteTR":
+                        new_check = "Pete"
+                # don't want to invoke armored xemnas twice to go back to unmarked
+                if (new_check == "ArmoredXemnas1"):
+                    if self.armored_xemnas_found:
+                        continue
                     else:
-                        if new_check == "PeteTR":
-                            new_check = "Pete"
-                    # don't want to invoke armored xemnas twice to go back to unmarked
-                    if (new_check == "ArmoredXemnas1"):
-                        if self.armored_xemnas_found:
-                            continue
-                        else:
-                            self.armored_xemnas_found = True
-                    # invoke button
+                        self.armored_xemnas_found = True
+                # invoke button if it's possible
+                try:
                     button_key = key_list[val_list.index(new_check)]
                     self.button_dict[button_key].invoke()
                     if hasattr(self, "last_found_check") and len(new_checks) != 0:
@@ -785,33 +785,34 @@ class BattleshipBoard():
             for new_boss in new_bosses:
                 if new_boss in self.important_checks_recorded:
                     continue
+                self.seen_bosses_recorded.append(new_boss)
+
+                # if boss enemy has been invoked...
+                if hasattr(self, 'replacements'):
+
+                    # in (original) boss enemy we don't want to track Future Pete
+                    if new_boss == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
+                        continue
+                    # in (original) boss enemy we don't want to track Armored Xemnas 2
+                    if new_boss == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
+                        new_boss = "ArmoredXemnas1"
+
+                    # try to get the randomized boss instead of the vanilla boss
+                    new_boss = self.replacements.get(new_boss, new_boss)
+
+                # if boss enemy isn't invoked, PeteTR is the real Pete
+                else:
+                    if new_boss == "PeteTR":
+                        new_boss = "Pete"
+
+                # don't want to invoke armored xemnas twice to go back to unmarked
+                if (new_boss == "ArmoredXemnas1"):
+                    if self.armored_xemnas_found:
+                        continue
+                    if not self.armored_xemnas_seen:
+                        self.armored_xemnas_seen = True
+                # invoke button if it's possible
                 try:
-                    self.seen_bosses_recorded.append(new_boss)
-
-                    # if boss enemy has been invoked...
-                    if hasattr(self, 'replacements'):
-
-                        # in (original) boss enemy we don't want to track Future Pete
-                        if new_boss == "Pete" and self.preset_name == "boss_enemy_bingo.txt":
-                            continue
-                        # in (original) boss enemy we don't want to track Armored Xemnas 2
-                        if new_boss == "ArmoredXemnas2" and self.preset_name == "boss_enemy_bingo.txt":
-                            new_boss = "ArmoredXemnas1"
-
-                        # try to get the randomized boss instead of the vanilla boss
-                        new_boss = self.replacements.get(new_boss, new_boss)
-
-                    # if boss enemy isn't invoked, PeteTR is the real Pete
-                    else:
-                        if new_check == "PeteTR":
-                            new_check = "Pete"
-
-                    # don't want to invoke armored xemnas twice to go back to unmarked
-                    if (new_boss == "ArmoredXemnas1"):
-                        if self.armored_xemnas_found:
-                            continue
-                        if not self.armored_xemnas_seen:
-                            self.armored_xemnas_seen = True
                     button_key = key_list[val_list.index(new_boss)]
                     self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
                     self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
