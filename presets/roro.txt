@@ -4,4 +4,3 @@ self.row_size, self.col_size = 11, 11
 self.ship_sizes = [5, 4, 3, 3, 2]
 self.width = 708
 self.height = 711
-self.bingo = False

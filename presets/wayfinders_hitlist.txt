@@ -2,4 +2,4 @@ self.valid_checks = [True, True, False, False, False, False, False, False, False
 self.row_size, self.col_size = 1, 8
 self.width = 1078
 self.width = 727
-self.height = 504
+self.height = 723
