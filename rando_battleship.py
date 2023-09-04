@@ -84,7 +84,7 @@ class BattleshipBoard():
 
         # Create & Configure root 
         self.root = Tk()
-        self.root.title("Rando Battleship (v2.1.0)")
+        self.root.title("Rando Battleship (v2.1.1)")
 
         # board is initially visible so set blind to false
         self.blind = False
@@ -349,15 +349,17 @@ class BattleshipBoard():
             f.write(f"self.fill = '{new_data}'\n" if value == "fill" else f"self.fill = {self.fill}\n")
             f.write(f"self.custom_images = '{new_data}'\n" if value == "custom" else f"self.custom_images = {self.custom_images}\n")
             f.write(f"self.autodetect = '{new_data}'\n" if value == "autodetect" else f"self.autodetect = {self.autodetect}\n")
-            f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}")
+            f.write(f"self.directions = '{new_data}'\n" if value == "directions" else f"self.directions = {self.directions}\n")
         if hasattr(self, "preset_name") and value == "dim":
-            with open(f"presets/{self.preset_name}", "r") as p:
-                preset_content = p.readlines()
-            preset_content[-2] = f"self.width = {new_data[0]}\n"
-            preset_content[-1] = f"self.height = {new_data[1]}"
-            with open(f"presets/{self.preset_name}", "w") as p:
-                p.writelines(preset_content)
-
+            try:
+                with open(f"presets/{self.preset_name}", "r") as p:
+                    preset_content = p.readlines()
+                preset_content[-2] = f"self.width = {new_data[0]}\n"
+                preset_content[-1] = f"self.height = {new_data[1]}\n"
+                with open(f"presets/{self.preset_name}", "w") as p:
+                    p.writelines(preset_content)
+            except FileNotFoundError:
+                pass
 
     def change_marking_colors(self, color_list = ["white"]):
 
@@ -884,7 +886,8 @@ class BattleshipBoard():
                 preset_size_save.write(f"self.bingo = {self.bingo}\n")
             preset_size_save.write(f"self.width = {self.width}\n")
             preset_size_save.write(f"self.height = {self.height}\n")
-            preset_size_save.write(f"self.preset_name = '{self.preset_name}'")
+            if hasattr(self, "preset_name") and self.preset_name in os.listdir("presets"):
+                preset_size_save.write(f"self.preset_name = '{self.preset_name}'")
 
 
     def display_edges(self, row_index, col_index):
@@ -992,10 +995,11 @@ class BattleshipBoard():
         
         # setup images
         self.raw_images = [Image.open(f'img/{"custom" if self.has_custom(check) else self.icons}/{check}').resize((int(self.width / (self.col_size*self.scaling_factor)), int(self.height / (self.row_size*self.scaling_factor)))) for check in self.check_names]
-        if self.preset_name == "hitlist.txt" and "Axel2.webp" in self.check_names:
-            self.raw_images[self.check_names.index("Axel2.webp")] = Image.open('img/static/Axel2.webp')
-        if self.preset_name == "boss_enemy_bingo.txt" and "ArmoredXemnas1.webp" in self.check_names:
-            self.raw_images[self.check_names.index("ArmoredXemnas1.webp")] = Image.open('img/static/ArmoredXemnas1.webp')
+        if hasattr(self, "preset_name"):
+            if self.preset_name == "hitlist.txt" and "Axel2.webp" in self.check_names:
+                self.raw_images[self.check_names.index("Axel2.webp")] = Image.open('img/static/Axel2.webp')
+            if self.preset_name == "boss_enemy_bingo.txt" and "ArmoredXemnas1.webp" in self.check_names:
+                self.raw_images[self.check_names.index("ArmoredXemnas1.webp")] = Image.open('img/static/ArmoredXemnas1.webp')
         self.used_images = deepcopy(self.raw_images)
         self.images = [ImageTk.PhotoImage(used_image) for used_image in self.used_images]
         with open("img.json", "r") as checktypes_json:
@@ -1688,7 +1692,8 @@ class BattleshipBoard():
                 for line in settings:
                     exec(line)
                     last_settings.write(line)
-            last_settings.write(f"self.preset_name = '{self.preset_name}'")
+            if hasattr(self, "preset_name") and self.preset_name in os.listdir("presets"):
+                last_settings.write(f"self.preset_name = '{self.preset_name}'")
         self.set_seedname(self.seedname)
         self.generate_card(self.row_size, self.col_size, self.seedname, mystery=self.mystery, maze=self.maze)
 
@@ -1697,50 +1702,50 @@ class BattleshipBoard():
         
 
         # remove enemyspoilers before next load AT ALL COSTS
+        filename = fd.askopenfilename()
         try:
-            filename = fd.askopenfilename()
             # get bunter hints if possible
             subprocess.call([os.path.join('autotracker', 'BunterHints', 'BunterHints.exe'), f'{filename}'], shell=True)
             with open("hints.txt", "r") as hints_file:
                 self.hints = ast.literal_eval(hints_file.read())
             self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
-
             os.remove('hints.txt')
-            os.mkdir('enemyspoilers')
-            shutil.unpack_archive(filename, './enemyspoilers', 'zip')
-            self.replacements = make_replacements_dict()
-            print(self.replacements)
-            shutil.rmtree('enemyspoilers')
-            window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
-            popup = Tk()
-            if type(self.replacements) == tuple:
-                self.replacements = self.replacements[1]
-                popup.iconbitmap("img/static/warning.ico")
-                popup.wm_title("WARNING!")
-                popup.geometry("380x80")
-                self.root.update_idletasks()
-                popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
-                popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
-                label = ttk.Label(popup, text='WARNING: This seed has a replacement that will likely crash your game. \n                     We recommend re-rolling.')
-                label.pack(side="top", fill="x", pady=10)
-                B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
-                B1.pack()
-            else:
-                popup.iconbitmap("img/static/success.ico")
-                popup.wm_title("Success!")
-                popup.geometry("217x70")
-                self.root.update_idletasks()
-                popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
-                popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
-                label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
-                label.pack(side="top", fill="x", pady=10)
-                B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
-                B1.pack()
-            self.menubar.entryconfig(9, label="B/E is ON")
-
         except:
-            if os.path.exists('enemyspoilers'):
-                shutil.rmtree('enemyspoilers')
+            pass
+
+        if os.path.exists('enemyspoilers'):
+            shutil.rmtree('enemyspoilers')
+        os.mkdir('enemyspoilers')
+        shutil.unpack_archive(filename, './enemyspoilers', 'zip')
+        self.replacements = make_replacements_dict()
+        print(self.replacements)
+        shutil.rmtree('enemyspoilers')
+        window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
+        popup = Tk()
+        if type(self.replacements) == tuple:
+            self.replacements = self.replacements[1]
+            popup.iconbitmap("img/static/warning.ico")
+            popup.wm_title("WARNING!")
+            popup.geometry("380x80")
+            self.root.update_idletasks()
+            popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+            popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+            label = ttk.Label(popup, text='WARNING: This seed has a replacement that will likely crash your game. \n                     We recommend re-rolling.')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
+        else:
+            popup.iconbitmap("img/static/success.ico")
+            popup.wm_title("Success!")
+            popup.geometry("217x70")
+            self.root.update_idletasks()
+            popup_width, popup_height = popup.winfo_width(), popup.winfo_height()
+            popup.geometry(f"+{window_x + window_width//2 - 43 * popup_width//80}+{window_y + window_height//2 - popup_height//2 - 7 * popup_height//10}")
+            label = ttk.Label(popup, text='Your boss enemy successfully loaded! :-)')
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = lambda: popup.destroy())
+            B1.pack()
+        self.menubar.entryconfig(9, label="B/E is ON")
 
 
     def validate_self_ships(self):

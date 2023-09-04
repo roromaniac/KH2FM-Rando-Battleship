@@ -1,9 +1,9 @@
 self.icons = 'sonic'
 self.marking_colors = {'Marking Color': '#00006c', 'Annotating Color': '#FFAC1C', 'Battleship Miss': '#0077be', 'Battleship Hit': 'red', 'Battleship Sink': 'pink', 'Bingo (Bunter)': 'purple'}
-self.width = 1078
-self.height = 123
-self.x = '-2170'
-self.y = '71'
+self.width = 778
+self.height = 756
+self.x = '-924'
+self.y = '310'
 self.fill = False
 self.custom_images = False
 self.autodetect = False
