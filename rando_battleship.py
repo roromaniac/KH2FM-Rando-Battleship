@@ -687,60 +687,60 @@ class BattleshipBoard():
                         except ValueError:
                             pass
                     # if a report is found and is a hint for bunter, change the tracker
-                    try:
-                        # this could be placed in its own function but it doesn't change functionality too much
-                        if new_check in self.hints.keys():
-                            if "unchanged" in self.hints[new_check]:
-                                orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
-                            else:
-                                orig_boss, replacement_boss = self.hints[new_check].split("became")
-                            orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
-                            replacement_boss = boss_str_reformat(replacement_boss, 'replacement', images = True)
-                            # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
-                            hint_button_key = key_list[val_list.index(replacement_boss)]
-                            current_width = int(self.width / (self.col_size*self.scaling_factor))
-                            current_height = int(self.height / (self.row_size*self.scaling_factor))
-                            main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(replacement_boss + ".webp") else self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
-                            background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
-                            paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
-                            arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(orig_boss + ".webp") else self.icons}/{orig_boss}.webp').convert('RGBA')
-                            arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
-                            if self.fill:
-                                arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
-                                arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
-                                arena_boss_photo = arena_white_background
-                            index_x, index_y = hint_button_key[0], hint_button_key[1]
-                            hinted_border_color = "white"
-                            border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
-                            background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
-                            arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
-                            if replacement_boss == "ArmoredXemnas1":
-                                if self.armored_xemnas_hinted:
-                                    # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
-                                    background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
-                                    background.save('temp.png')
-                                    old_arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.first_boss_hint + ".webp") else self.icons}/{self.first_boss_hint}.webp').convert('RGBA')
-                                    old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
-                                    if self.fill:
-                                        old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
-                                        old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
-                                        old_arena_boss_photo = old_arena_white_background
-                                    old_arena_boss_photo = ImageOps.expand(old_arena_boss_photo, border=border, fill=hinted_border_color)
-                                    background = Image.open('temp.png')
-                                    background.paste(old_arena_boss_photo, (paste_x * 19 // 10, 0), mask = old_arena_boss_photo)
-                                    os.remove('temp.png')
-                                else:
-                                    self.armored_xemnas_hinted = True
-                                    self.first_boss_hint = orig_boss
-                                    background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
-                            else:
-                                background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
-                            self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
-                            hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
-                            self.button_dict[(index_x, index_y)].configure(image = hinted_image)
-                            self.button_dict[(index_x, index_y)].image = hinted_image
-                    except:
-                        pass
+                    # try:
+                    #     # this could be placed in its own function but it doesn't change functionality too much
+                    #     if new_check in self.hints.keys():
+                    #         if "unchanged" in self.hints[new_check]:
+                    #             orig_boss = replacement_boss = self.hints[new_check].split("is")[0]
+                    #         else:
+                    #             orig_boss, replacement_boss = self.hints[new_check].split("became")
+                    #         orig_boss = boss_str_reformat(orig_boss, 'original', images = True)
+                    #         replacement_boss = boss_str_reformat(replacement_boss, 'replacement', images = True)
+                    #         # the try block applies to this b/c we only want the hint to apply if the replacement boss is on the tracker
+                    #         hint_button_key = key_list[val_list.index(replacement_boss)]
+                    #         current_width = int(self.width / (self.col_size*self.scaling_factor))
+                    #         current_height = int(self.height / (self.row_size*self.scaling_factor))
+                    #         main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(replacement_boss + ".webp") else self.icons}/{replacement_boss}.webp').resize((current_width, current_height)).convert('RGBA')
+                    #         background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
+                    #         paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
+                    #         arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(orig_boss + ".webp") else self.icons}/{orig_boss}.webp').convert('RGBA')
+                    #         arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
+                    #         if self.fill:
+                    #             arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
+                    #             arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
+                    #             arena_boss_photo = arena_white_background
+                    #         index_x, index_y = hint_button_key[0], hint_button_key[1]
+                    #         hinted_border_color = "white"
+                    #         border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
+                    #         background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
+                    #         arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                    #         if replacement_boss == "ArmoredXemnas1":
+                    #             if self.armored_xemnas_hinted:
+                    #                 # DOES THE IMAGE REALLY NEED TO BE SAVED AND REOPENED?
+                    #                 background.paste(arena_boss_photo, (0, 0), mask = arena_boss_photo)
+                    #                 background.save('temp.png')
+                    #                 old_arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.first_boss_hint + ".webp") else self.icons}/{self.first_boss_hint}.webp').convert('RGBA')
+                    #                 old_arena_boss_photo = old_arena_boss_photo.resize((paste_x, paste_y))
+                    #                 if self.fill:
+                    #                     old_arena_white_background = Image.new("RGBA", old_arena_boss_photo.size, "WHITE")
+                    #                     old_arena_white_background.paste(old_arena_boss_photo, (0,0), old_arena_boss_photo)
+                    #                     old_arena_boss_photo = old_arena_white_background
+                    #                 old_arena_boss_photo = ImageOps.expand(old_arena_boss_photo, border=border, fill=hinted_border_color)
+                    #                 background = Image.open('temp.png')
+                    #                 background.paste(old_arena_boss_photo, (paste_x * 19 // 10, 0), mask = old_arena_boss_photo)
+                    #                 os.remove('temp.png')
+                    #             else:
+                    #                 self.armored_xemnas_hinted = True
+                    #                 self.first_boss_hint = orig_boss
+                    #                 background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
+                    #         else:
+                    #             background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
+                    #         self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
+                    #         hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
+                    #         self.button_dict[(index_x, index_y)].configure(image = hinted_image)
+                    #         self.button_dict[(index_x, index_y)].image = hinted_image
+                    # except:
+                    #     pass
                     # try to get the randomized boss instead of the vanilla boss
                     new_check = self.replacements.get(new_check, new_check)
                 # if boss enemy isn't invoked, PeteTR is the real Pete
@@ -1703,22 +1703,11 @@ class BattleshipBoard():
 
         # remove enemyspoilers before next load AT ALL COSTS
         filename = fd.askopenfilename()
-        try:
-            # get bunter hints if possible
-            subprocess.call([os.path.join('autotracker', 'BunterHints', 'BunterHints.exe'), f'{filename}'], shell=True)
-            with open("hints.txt", "r") as hints_file:
-                self.hints = ast.literal_eval(hints_file.read())
-            self.hints = {"Report" + str(k): v for k, v in self.hints.items()}
-            os.remove('hints.txt')
-        except:
-            pass
-
         if os.path.exists('enemyspoilers'):
             shutil.rmtree('enemyspoilers')
         os.mkdir('enemyspoilers')
         shutil.unpack_archive(filename, './enemyspoilers', 'zip')
         self.replacements = make_replacements_dict()
-        print(self.replacements)
         shutil.rmtree('enemyspoilers')
         window_x, window_y, window_width, window_height = self.root.winfo_rootx(), self.root.winfo_rooty(), self.root.winfo_width(), self.root.winfo_height()
         popup = Tk()
