@@ -672,9 +672,9 @@ class BattleshipBoard():
                             try:
                                 fight_key = key_list[val_list.index(self.replacements[fight])]
                                 self.set_style(f"bbossfound{fight_key[0]}{fight_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{fight_key[0]}{fight_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
-                                ff_image_1 = ImageTk.PhotoImage(self.used_images[fight_key[0]*self.col_size + fight_key[1]])
-                                self.button_dict[fight_key].configure(image = ff_image_1)
-                                self.button_dict[fight_key].image = ff_image_1
+                                ff_image = ImageTk.PhotoImage(self.used_images[fight_key[0]*self.col_size + fight_key[1]])
+                                self.button_dict[fight_key].configure(image = ff_image)
+                                self.button_dict[fight_key].image = ff_image
                                 self.button_dict[fight_key].configure(style=f"bbossfound{fight_key[0]}{fight_key[1]}.TButton")
                                 current_width = int(self.width / (self.col_size*self.scaling_factor))
                                 current_height = int(self.height / (self.row_size*self.scaling_factor))
@@ -692,6 +692,7 @@ class BattleshipBoard():
                                 border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
                                 background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
                                 arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                                background.paste(arena_boss_photo, (paste_x * 19 // 10, 0), mask = arena_boss_photo)
                                 self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
                                 hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
                                 self.button_dict[(index_x, index_y)].configure(image = hinted_image)
