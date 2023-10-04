@@ -668,24 +668,36 @@ class BattleshipBoard():
                         new_check = "ArmoredXemnas1"
                     # reveal final fights if Xemnas is defeated
                     if new_check == "Xemnas":
-                        try:
-                            armored_xem_1_key = key_list[val_list.index(self.replacements["ArmoredXemnas1"])]
-                            self.set_style(f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
-                            ff_image_1 = ImageTk.PhotoImage(self.used_images[armored_xem_1_key[0]*self.col_size + armored_xem_1_key[1]])
-                            self.button_dict[armored_xem_1_key].configure(image = ff_image_1)
-                            self.button_dict[armored_xem_1_key].image = ff_image_1
-                            self.button_dict[armored_xem_1_key].configure(style=f"bbossfound{armored_xem_1_key[0]}{armored_xem_1_key[1]}.TButton")
-                        except ValueError:
-                            pass
-                        try:
-                            armored_xem_2_key = key_list[val_list.index(self.replacements["ArmoredXemnas2"])]
-                            self.set_style(f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton", 'background'), bordercolor='orange', highlightthickness=10, padding=0)
-                            ff_image_2 = ImageTk.PhotoImage(self.used_images[armored_xem_2_key[0]*self.col_size + armored_xem_2_key[1]])
-                            self.button_dict[armored_xem_2_key].configure(image = ff_image_2)
-                            self.button_dict[armored_xem_2_key].image = ff_image_2
-                            self.button_dict[armored_xem_2_key].configure(style=f"bbossfound{armored_xem_2_key[0]}{armored_xem_2_key[1]}.TButton")
-                        except ValueError:
-                            pass
+                        for fight in ["ArmoredXemnas1", "ArmoredXemnas2", "FinalXemnas"]:
+                            try:
+                                fight_key = key_list[val_list.index(self.replacements[fight])]
+                                self.set_style(f"bbossfound{fight_key[0]}{fight_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{fight_key[0]}{fight_key[1]}.TButton", 'background'), bordercolor='#FF69B4', highlightthickness=10, padding=0)
+                                ff_image_1 = ImageTk.PhotoImage(self.used_images[fight_key[0]*self.col_size + fight_key[1]])
+                                self.button_dict[fight_key].configure(image = ff_image_1)
+                                self.button_dict[fight_key].image = ff_image_1
+                                self.button_dict[fight_key].configure(style=f"bbossfound{fight_key[0]}{fight_key[1]}.TButton")
+                                current_width = int(self.width / (self.col_size*self.scaling_factor))
+                                current_height = int(self.height / (self.row_size*self.scaling_factor))
+                                main_boss_photo = Image.open(f'img/{"custom" if self.has_custom(self.replacements[fight] + ".webp") else self.icons}/{self.replacements[fight]}.webp').resize((current_width, current_height)).convert('RGBA')
+                                background = Image.new('RGBA', main_boss_photo.size, (255, 0, 0, 0))
+                                paste_x, paste_y = main_boss_photo.size[0]//3, main_boss_photo.size[1]//3
+                                arena_boss_photo = Image.open(f'img/{"custom" if self.has_custom(fight + ".webp") else self.icons}/{fight}.webp').convert('RGBA')
+                                arena_boss_photo = arena_boss_photo.resize((paste_x, paste_y))
+                                if self.fill:
+                                    arena_white_background = Image.new("RGBA", arena_boss_photo.size, "WHITE")
+                                    arena_white_background.paste(arena_boss_photo, (0,0), arena_boss_photo)
+                                    arena_boss_photo = arena_white_background
+                                index_x, index_y = fight_key[0], fight_key[1]
+                                hinted_border_color = "white"
+                                border = (max(1, self.width//250), max(1, self.width//250), max(1, self.height//250), self.height//250)
+                                background.paste(main_boss_photo, (0,0), mask = main_boss_photo)
+                                arena_boss_photo = ImageOps.expand(arena_boss_photo, border=border, fill=hinted_border_color)
+                                self.used_images[index_x*self.col_size + index_y] = background.resize((current_width, current_height))
+                                hinted_image = ImageTk.PhotoImage(self.used_images[index_x*self.col_size + index_y])
+                                self.button_dict[(index_x, index_y)].configure(image = hinted_image)
+                                self.button_dict[(index_x, index_y)].image = hinted_image
+                            except ValueError:
+                                pass
                     # if a report is found and is a hint for bunter, change the tracker
                     # try:
                     #     # this could be placed in its own function but it doesn't change functionality too much
