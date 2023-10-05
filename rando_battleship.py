@@ -830,7 +830,7 @@ class BattleshipBoard():
                 try:
                     button_key = key_list[val_list.index(new_boss)]
                     self.set_style(f"bbossfound{button_key[0]}{button_key[1]}.TButton", background = ttk.Style().lookup(f"bnormal{button_key[0]}{button_key[1]}.TButton", 'background'), bordercolor='blue', highlightthickness=10, padding=0)
-                    self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton")
+                    self.button_dict[button_key].configure(style=f"bbossfound{button_key[0]}{button_key[1]}.TButton", borderwidth=25)
                 except ValueError:
                     pass
     
@@ -925,7 +925,6 @@ class BattleshipBoard():
             padx = (self.padding_dict[(row_index, col_index + 1)][1], self.padding_dict[(row_index, col_index + 1)][2])
             self.button_dict[(row_index, col_index + 1)].grid(row=row_index, column=col_index + 1, padx=padx, sticky="nwes")
         
-
 
     def display_maze(self, row_index, col_index, mystery=False):
         neighbors = self.neighbor_dict[(row_index, col_index)]
